@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile | DailyCollect{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="mb-4">
+        <h4 class="fw-bold">My Profile</h4>
+        <p class="text-muted">Manage and view your personal information.</p>
+    </div>
+
+    {% if member %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                     style="width:65px;height:65px;font-size:25px;">
+                    {{ member.first_name|first|upper }}
+                </div>
+
+                <div>
+                    <h5 class="fw-bold mb-1">{{ member.full_name }}</h5>
+                    <span class="text-muted">{{ member.member_no }}</span>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <small class="text-muted">First Name</small>
+                    <p class="fw-semibold">{{ member.first_name }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Last Name</small>
+                    <p class="fw-semibold">{{ member.last_name }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Phone Number</small>
+                    <p class="fw-semibold">{{ member.phone }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Email</small>
+                    <p class="fw-semibold">{{ member.email|default:"Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Gender</small>
+                    <p class="fw-semibold">{{ member.get_gender_display|default:"Not provided" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Registration Date</small>
+                    <p class="fw-semibold">{{ member.joined_at|date:"d M Y" }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Membership Status</small>
+                    <p>
+                        <span class="badge bg-success">
+                            {{ member.get_status_display }}
+                        </span>
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Address</small>
+                    <p class="fw-semibold">{{ member.address|default:"Not provided" }}</p>
+                </div>
+            </div>
+
+            <hr>
+
+            <a href="{% url 'accounts:change_password' %}"
+               class="btn btn-outline-primary">
+                <i class="bi bi-lock me-1"></i> Change Password
+            </a>
+
+        </div>
+    </div>
+    {% else %}
+        <div class="alert alert-warning">
+            Your member profile has not been created or linked to your account.
+            Please contact the administrator.
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

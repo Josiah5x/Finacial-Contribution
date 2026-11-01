@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Agent Management</h4>
+            <p class="text-muted mb-0">
+                Manage your collection agents.
+            </p>
+        </div>
+
+        {% if request.user.role == 'ADMIN' %}
+        <a href="{% url 'agents:agent_create' %}"
+           class="btn btn-success">
+            <i class="bi bi-person-plus me-1"></i>
+            Register Agent
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Total Agents</small>
+                    <h3 class="fw-bold mb-0">{{ total_agents }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Active Agents</small>
+                    <h3 class="fw-bold text-success mb-0">
+                        {{ active_agents }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Inactive Agents</small>
+                    <h3 class="fw-bold text-danger mb-0">
+                        {{ inactive_agents }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+
+            <form method="GET" class="row g-2">
+
+                <div class="col-md-6">
+                    <input type="text"
+                           name="q"
+                           class="form-control"
+                           placeholder="Search agent number, name, phone or area..."
+                           value="{{ search }}">
+                </div>
+
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}"
+                            {% if selected_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex gap-2">
+                    <button class="btn btn-primary flex-fill">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+
+                    <a href="{% url 'agents:agent_list' %}"
+                       class="btn btn-light">
+                        Reset
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Agent Table -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white py-3">
+            <h6 class="fw-bold mb-0">Registered Agents</h6>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Agent</th>
+                        <th>Agent No.</th>
+                        <th>Phone</th>
+                        <th>Collection Area</th>
+                        <th>Daily Target</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for agent in page_obj %}
+
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">
+                                {{ agent.full_name }}
+                            </div>
+                            <small class="text-muted">
+                                {{ agent.user.email }}
+                            </small>
+                        </td>
+
+                        <td>{{ agent.agent_no }}</td>
+
+                        <td>{{ agent.phone }}</td>
+
+                        <td>{{ agent.collection_area }}</td>
+
+                        <td>
+                            ₦{{ agent.daily_target|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            {% if agent.status == 'ACTIVE' %}
+                                <span class="badge bg-success-subtle text-success">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a href="{% url 'agents:agent_detail' agent.pk %}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i> View
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-people fs-1 text-muted"></i>
+                            <p class="text-muted mt-2 mb-0">
+                                No agents found.
+                            </p>
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-white">
+
+            <nav>
+                <ul class="pagination justify-content-end mb-0">
+
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?q={{ search|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.previous_page_number }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?q={{ search|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.next_page_number }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <h4 class="fw-bold mb-1">Transfer Member</h4>
+        <p class="text-muted mb-0">
+            Transfer a member to another collection agent.
+        </p>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="max-width:700px;">
+
+        <div class="card-body p-4">
+
+            <div class="alert alert-info">
+                <strong>Member:</strong> {{ assignment.member.full_name }}<br>
+                <strong>Member No:</strong> {{ assignment.member.member_no }}<br>
+                <strong>Current Agent:</strong> {{ assignment.agent.full_name }}
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold">
+                            {{ field.label }}
+                        </label>
+
+                        {{ field }}
+
+                        {% for error in field.errors %}
+                            <small class="text-danger d-block">
+                                {{ error }}
+                            </small>
+                        {% endfor %}
+
+                    </div>
+                {% endfor %}
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+
+                    <a href="{% url 'agents:agent_detail' assignment.agent.pk %}"
+                       class="btn btn-light">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-primary"
+                            onclick="return confirm('Transfer this member to the selected agent?')">
+                        <i class="bi bi-arrow-left-right me-1"></i>
+                        Transfer Member
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,267 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{ member.full_name }} | DailyCollect{% endblock %}
+{% block page_title %}Member Profile{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-panel mb-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+        <div class="d-flex align-items-center gap-3">
+
+            {% if member.photo %}
+                <img src="{{ member.photo.url }}"
+                     class="rounded-circle"
+                     width="85"
+                     height="85"
+                     style="object-fit:cover;">
+            {% else %}
+                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                     style="width:85px;height:85px;">
+                    <i class="bi bi-person fs-1 text-muted"></i>
+                </div>
+            {% endif %}
+
+            <div>
+                <h4 class="fw-bold mb-1">{{ member.full_name }}</h4>
+                <p class="text-muted mb-1">{{ member.member_no }}</p>
+
+                {% if member.status == 'ACTIVE' %}
+                    <span class="badge bg-success">Active Member</span>
+                {% elif member.status == 'PENDING' %}
+                    <span class="badge bg-warning text-dark">Pending Approval</span>
+                {% elif member.status == 'SUSPENDED' %}
+                    <span class="badge bg-danger">Suspended</span>
+                {% else %}
+                    <span class="badge bg-secondary">
+                        {{ member.get_status_display }}
+                    </span>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a href="{% url 'members:member_list' %}"
+               class="btn btn-light">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+
+            {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+            <a href="{% url 'members:member_update' member.pk %}"
+               class="btn btn-success">
+                <i class="bi bi-pencil"></i> Edit Member
+            </a>
+            <a href="{% url 'members:assignment_history' member.pk %}"
+            class="btn btn-outline-primary">
+                <i class="bi bi-clock-history me-1"></i>
+                Assignment History
+            </a>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row g-3">
+
+    <!-- Personal Information -->
+    <div class="col-lg-6">
+        <div class="dashboard-panel h-100">
+
+            <h6 class="panel-title mb-4">
+                <i class="bi bi-person me-2"></i>
+                Personal Information
+            </h6>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">First Name</small>
+                <strong>{{ member.first_name }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Last Name</small>
+                <strong>{{ member.last_name }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Other Names</small>
+                <strong>{{ member.other_names|default:"—" }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Gender</small>
+                <strong>{{ member.get_gender_display|default:"—" }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Date of Birth</small>
+                <strong>{{ member.date_of_birth|date:"d M Y"|default:"—" }}</strong>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="col-lg-6">
+        <div class="dashboard-panel h-100">
+
+            <h6 class="panel-title mb-4">
+                <i class="bi bi-telephone me-2"></i>
+                Contact Information
+            </h6>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Phone Number</small>
+                <strong>{{ member.phone }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Email Address</small>
+                <strong>{{ member.email|default:"—" }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Residential Address</small>
+                <strong>{{ member.address|default:"—" }}</strong>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Next of Kin -->
+    <div class="col-lg-6">
+        <div class="dashboard-panel h-100">
+
+            <h6 class="panel-title mb-4">
+                <i class="bi bi-people me-2"></i>
+                Next of Kin
+            </h6>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Full Name</small>
+                <strong>{{ member.next_of_kin|default:"—" }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Phone Number</small>
+                <strong>{{ member.next_of_kin_phone|default:"—" }}</strong>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Membership Information -->
+    <div class="col-lg-6">
+        <div class="dashboard-panel h-100">
+
+            <h6 class="panel-title mb-4">
+                <i class="bi bi-card-checklist me-2"></i>
+                Membership Information
+            </h6>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Member Number</small>
+                <strong>{{ member.member_no }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Registration Date</small>
+                <strong>{{ member.joined_at|date:"d M Y" }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Account Status</small>
+                <strong>{{ member.get_status_display }}</strong>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Registered By</small>
+                <strong>
+                    {% if member.created_by %}
+                        {{ member.created_by.username }}
+                    {% else %}
+                        Self Registration
+                    {% endif %}
+                </strong>
+            </div>
+
+        </div>
+    </div>
+
+    {% if request.user.role == 'ADMIN' %}
+
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body">
+
+        <h6 class="fw-bold mb-3">
+            Member Account Management
+        </h6>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            {% if member.status == 'PENDING' %}
+
+                <form method="POST"
+                      action="{% url 'members:member_approve' member.pk %}">
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-success"
+                            onclick="return confirm('Approve this member?')">
+
+                        <i class="bi bi-check-circle me-1"></i>
+                        Approve Member
+                    </button>
+                </form>
+
+            {% elif member.status == 'ACTIVE' %}
+
+                <form method="POST"
+                      action="{% url 'members:member_suspend' member.pk %}">
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-danger"
+                            onclick="return confirm('Suspend this member?')">
+
+                        <i class="bi bi-person-x me-1"></i>
+                        Suspend Member
+                    </button>
+                </form>
+
+            {% elif member.status == 'SUSPENDED' or member.status == 'INACTIVE' %}
+
+                <form method="POST"
+                      action="{% url 'members:member_reactivate' member.pk %}">
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-success"
+                            onclick="return confirm('Reactivate this member?')">
+
+                        <i class="bi bi-person-check me-1"></i>
+                        Reactivate Member
+                    </button>
+                </form>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+
+{% endif %}
+
+
+
+</div>
+
+{% endblock %}

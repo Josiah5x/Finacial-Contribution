@@ -1,0 +1,48 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="card border-0 shadow-sm mx-auto" style="max-width:750px">
+        <div class="card-header bg-white py-3">
+            <h4 class="mb-0">{{ title }}</h4>
+        </div>
+
+        <div class="card-body p-4">
+
+            <form method="POST">
+                {% csrf_token %}
+
+                {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="text-muted d-block">
+                            {{ field.help_text }}
+                        </small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                {{ form.non_field_errors }}
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        Save User
+                    </button>
+                    <a href="{% url 'accounts:user_list' %}"
+                       class="btn btn-light">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

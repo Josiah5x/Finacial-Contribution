@@ -1,0 +1,410 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DailyCollect | Smarter Daily Contributions</title>
+
+    <meta name="description"
+          content="Manage daily contributions, members, collections and withdrawals with DailyCollect.">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+      href="{% static 'css/landing.css' %}">
+        </head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top landing-nav">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <span class="brand-icon"><i class="bi bi-wallet2"></i></span>
+            Daily<span>Collect</span>
+        </a>
+
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a href="#home" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
+                <li class="nav-item"><a href="#features" class="nav-link">Features</a></li>
+                <li class="nav-item"><a href="#how-it-works" class="nav-link">How It Works</a></li>
+                <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <a href="{% url 'accounts:login' %}" class="login-link">Login</a>
+                <a href="{% url 'accounts:register' %}" class="register-link btn btn-brand"></a>
+                    Create Account
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+<!-- HERO -->
+<section class="hero-section" id="home">
+    <div class="container">
+        <div class="row align-items-center">
+
+            <div class="col-lg-6">
+                <span class="hero-label">
+                    <i class="bi bi-shield-check"></i>
+                    Smarter Contribution Management
+                </span>
+
+                <h1>
+                    Make Daily Contributions
+                    <span>Simple, Secure and Transparent.</span>
+                </h1>
+
+                <p class="hero-description">
+                    Take control of your daily savings and contribution
+                    operations. Manage members, track collections,
+                    monitor balances and process withdrawals from
+                    one easy-to-use platform.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="#contact" class="btn btn-brand btn-lg">
+                        Get Started <i class="bi bi-arrow-right"></i>
+                    </a>
+
+                    <a href="{% url 'accounts:login' %}"
+                       class="btn btn-outline-brand btn-lg">
+                        Sign In
+                    </a>
+                </div>
+
+                <div class="hero-trust">
+                    <div><i class="bi bi-check-circle-fill"></i> Clear transaction records</div>
+                    <div><i class="bi bi-check-circle-fill"></i> Cash and bank transfer tracking</div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="hero-dashboard">
+
+                    <div class="dashboard-top">
+                        <div>
+                            <small>Contribution Overview</small>
+                            <h5>Welcome Back!</h5>
+                        </div>
+                        <span class="dashboard-avatar">
+                            <i class="bi bi-person"></i>
+                        </span>
+                    </div>
+
+                    <div class="balance-card">
+                        <small>Total Contributions</small>
+                        <h2>₦2,450,000</h2>
+                        <span><i class="bi bi-graph-up-arrow"></i> Sample dashboard preview</span>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-6">
+                            <div class="mini-card">
+                                <i class="bi bi-people"></i>
+                                <small>Total Members</small>
+                                <h4>250</h4>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="mini-card">
+                                <i class="bi bi-cash-stack"></i>
+                                <small>Today's Collection</small>
+                                <h4>₦85,000</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="activity-card">
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Recent Activity</strong>
+                            <small>Example</small>
+                        </div>
+
+                        <div class="activity-item">
+                            <span class="activity-icon"><i class="bi bi-arrow-down-left"></i></span>
+                            <div>
+                                <strong>Daily Contribution</strong>
+                                <small>Cash payment</small>
+                            </div>
+                            <b>₦5,000</b>
+                        </div>
+
+                        <div class="activity-item">
+                            <span class="activity-icon"><i class="bi bi-bank"></i></span>
+                            <div>
+                                <strong>Bank Transfer</strong>
+                                <small>Payment recorded</small>
+                            </div>
+                            <b>₦10,000</b>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- TRUST -->
+<section class="trust-section">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <i class="bi bi-shield-lock"></i>
+                <h6>Secure Records</h6>
+                <p>Keep contribution records organised.</p>
+            </div>
+
+            <div class="col-md-4">
+                <i class="bi bi-wallet2"></i>
+                <h6>Payment Tracking</h6>
+                <p>Monitor cash and bank transfer payments.</p>
+            </div>
+
+            <div class="col-md-4">
+                <i class="bi bi-bar-chart-line"></i>
+                <h6>Clear Reports</h6>
+                <p>Understand collections and withdrawals.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ABOUT -->
+<section class="section-padding" id="about">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="section-label">ABOUT DAILYCOLLECT</span>
+                <h2 class="section-title">
+                    Better control over every contribution.
+                </h2>
+
+                <p class="section-description">
+                    DailyCollect helps contribution businesses,
+                    cooperative operators and collection teams
+                    organise their daily financial activities.
+                </p>
+
+                <p class="section-description">
+                    From member registration to payment collection,
+                    account balances and withdrawal records,
+                    everything is managed in one place.
+                </p>
+
+                <a href="#features" class="btn btn-brand">
+                    Explore Features
+                </a>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="about-card">
+                    <div class="about-icon"><i class="bi bi-calendar-check"></i></div>
+                    <h4>Organised Daily Operations</h4>
+                    <p>Manage daily contribution activities with organised digital records.</p>
+
+                    <div class="about-icon"><i class="bi bi-people"></i></div>
+                    <h4>Member and Agent Management</h4>
+                    <p>Keep track of members, collection agents and their activities.</p>
+
+                    <div class="about-icon"><i class="bi bi-receipt"></i></div>
+                    <h4>Transparent Transactions</h4>
+                    <p>Maintain records of collections, payments and withdrawals.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- FEATURES -->
+<section class="features-section section-padding" id="features">
+    <div class="container">
+        <div class="section-heading text-center">
+            <span class="section-label">OUR FEATURES</span>
+            <h2 class="section-title">Everything you need to manage contributions</h2>
+            <p>Powerful tools designed to simplify your daily operations.</p>
+        </div>
+
+        <div class="row g-4 mt-4">
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <i class="bi bi-person-plus"></i>
+                    <h5>Member Management</h5>
+                    <p>Register members, manage profiles and maintain contact information.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <i class="bi bi-calendar2-check"></i>
+                    <h5>Daily Contributions</h5>
+                    <p>Manage daily contribution plans, schedules and payment records.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <i class="bi bi-cash-coin"></i>
+                    <h5>Collection Management</h5>
+                    <p>Record cash collections and bank transfer payments.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <i class="bi bi-person-badge"></i>
+                    <h5>Agent Management</h5>
+                    <p>Manage collection agents and monitor their activities.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <i class="bi bi-wallet"></i>
+                    <h5>Member Wallets</h5>
+                    <p>Track member balances and financial transaction history.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                    <h5>Reports and Analytics</h5>
+                    <p>Review collections, withdrawals, expenses and business performance.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- HOW IT WORKS -->
+<section class="section-padding" id="how-it-works">
+    <div class="container">
+        <div class="section-heading text-center">
+            <span class="section-label">HOW IT WORKS</span>
+            <h2 class="section-title">Simple steps. Better management.</h2>
+        </div>
+
+        <div class="row g-4 mt-4">
+            <div class="col-md-3">
+                <div class="step-card">
+                    <span>01</span>
+                    <i class="bi bi-person-plus"></i>
+                    <h5>Register Members</h5>
+                    <p>Create member profiles and assign collection agents.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="step-card">
+                    <span>02</span>
+                    <i class="bi bi-cash"></i>
+                    <h5>Record Payments</h5>
+                    <p>Record cash and bank transfer contributions.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="step-card">
+                    <span>03</span>
+                    <i class="bi bi-graph-up"></i>
+                    <h5>Track Balances</h5>
+                    <p>Monitor contributions and account balances.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="step-card">
+                    <span>04</span>
+                    <i class="bi bi-file-earmark-check"></i>
+                    <h5>Generate Reports</h5>
+                    <p>Review financial activities and transaction records.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+    <div class="container text-center">
+        <span>TAKE CONTROL OF YOUR CONTRIBUTIONS</span>
+        <h2>Ready to manage your daily contributions smarter?</h2>
+        <p>Get in touch to learn more about DailyCollect.</p>
+
+        <a href="mailto:info@yourdomain.com?subject=DailyCollect%20Enquiry"
+           class="btn btn-light btn-lg">
+            Contact Us <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+</section>
+
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <a class="navbar-brand text-white" href="#">
+                    Daily<span>Collect</span>
+                </a>
+                <p class="mt-3">
+                    A smarter way to manage daily contributions,
+                    members and collections.
+                </p>
+            </div>
+
+            <div class="col-md-3">
+                <h6>Quick Links</h6>
+                <a href="#about">About</a>
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+            </div>
+
+            <div class="col-md-3">
+                <h6>Account</h6>
+                <a href="{% url 'accounts:login' %}">Login</a>
+                <a href="#contact">Contact Us</a>
+            </div>
+        </div>
+
+        <hr>
+
+        <p class="text-center mb-0">
+            &copy; {% now "Y" %} DailyCollect. All rights reserved.
+        </p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

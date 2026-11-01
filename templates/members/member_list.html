@@ -1,0 +1,256 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Members | DailyCollect{% endblock %}
+{% block page_title %}Member Management{% endblock %}
+
+{% block content %}
+
+<!-- Statistics -->
+<div class="row g-3 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Total Members</span>
+            <div class="stat-value">{{ total_members }}</div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Active Members</span>
+            <div class="stat-value text-success">{{ active_members }}</div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Pending Approval</span>
+            <div class="stat-value text-warning">{{ pending_members }}</div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Suspended Members</span>
+            <div class="stat-value text-danger">{{ suspended_members }}</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Member Directory -->
+<div class="dashboard-panel">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+        <div>
+            <h5 class="fw-bold mb-1">Members Directory</h5>
+            <p class="text-muted small mb-0">
+                Manage all registered contribution members.
+            </p>
+        </div>
+
+        {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+        <a href="{% url 'members:member_create' %}"
+           class="btn btn-success">
+            <i class="bi bi-person-plus me-1"></i>
+            Add Member
+        </a>
+        {% endif %}
+
+    </div>
+
+    <!-- Search and Filter -->
+    <form method="GET" class="row g-2 mb-4">
+
+        <div class="col-lg-6">
+            <input type="text"
+                   name="q"
+                   class="form-control"
+                   placeholder="Search name, member number, phone..."
+                   value="{{ search }}">
+        </div>
+
+        <div class="col-lg-3">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+
+                {% for value, label in status_choices %}
+                <option value="{{ value }}"
+                    {% if selected_status == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Search
+            </button>
+
+            <a href="{% url 'members:member_list' %}"
+               class="btn btn-light">
+                Reset
+            </a>
+        </div>
+
+    </form>
+
+    <!-- Members Table -->
+    <div class="table-responsive">
+
+        <table class="table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Member No.</th>
+                    <th>Phone</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for member in page_obj %}
+
+                <tr>
+
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+
+                            {% if member.photo %}
+                                <img src="{{ member.photo.url }}"
+                                     width="38"
+                                     height="38"
+                                     class="rounded-circle"
+                                     style="object-fit:cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                                     style="width:38px;height:38px;">
+                                    <i class="bi bi-person text-muted"></i>
+                                </div>
+                            {% endif %}
+
+                            <div>
+                                <div class="fw-semibold">
+                                    {{ member.full_name }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ member.email|default:"No email" }}
+                                </small>
+                            </div>
+
+                        </div>
+                    </td>
+
+                    <td>{{ member.member_no }}</td>
+
+                    <td>{{ member.phone }}</td>
+
+                    <td>{{ member.joined_at|date:"d M Y" }}</td>
+
+                    <td>
+                        {% if member.status == 'ACTIVE' %}
+                            <span class="badge bg-success">Active</span>
+                        {% elif member.status == 'PENDING' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif member.status == 'SUSPENDED' %}
+                            <span class="badge bg-danger">Suspended</span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                {{ member.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light"
+                                    data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'members:member_detail' member.pk %}">
+                                        <i class="bi bi-eye me-2"></i>
+                                        View Details
+                                    </a>
+                                </li>
+
+                                {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'members:member_update' member.pk %}">
+                                        <i class="bi bi-pencil me-2"></i>
+                                        Edit Member
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <i class="bi bi-people fs-1 text-muted"></i>
+                        <p class="text-muted mt-2 mb-0">
+                            No members found.
+                        </p>
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+
+        <ul class="pagination justify-content-end">
+
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?q={{ search|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.previous_page_number }}">
+                    Previous
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?q={{ search|urlencode }}&status={{ selected_status|urlencode }}&page={{ page_obj.next_page_number }}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+
+        </ul>
+
+    </nav>
+    {% endif %}
+
+</div>
+
+{% endblock %}

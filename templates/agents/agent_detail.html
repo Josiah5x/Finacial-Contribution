@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h4 class="fw-bold mb-1">Agent Profile</h4>
+            <p class="text-muted mb-0">
+                Agent information and employment details.
+            </p>
+        </div>
+
+        <a href="{% url 'agents:agent_list' %}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+
+    </div>
+
+    <!-- Agent Header -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="rounded-circle bg-success-subtle text-success
+                            d-flex align-items-center justify-content-center"
+                     style="width:65px;height:65px;font-size:25px;">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+
+                <div>
+                    <h4 class="fw-bold mb-1">
+                        {{ agent.full_name }}
+                    </h4>
+
+                    <div class="text-muted">
+                        {{ agent.agent_no }}
+                    </div>
+
+                    {% if agent.status == 'ACTIVE' %}
+                        <span class="badge bg-success-subtle text-success mt-2">
+                            Active Agent
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger mt-2">
+                            Inactive Agent
+                        </span>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Personal Information -->
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body p-4">
+
+                    <h6 class="fw-bold mb-4">
+                        <i class="bi bi-person me-2 text-success"></i>
+                        Personal Information
+                    </h6>
+
+                    <div class="mb-3">
+                        <small class="text-muted">First Name</small>
+                        <div class="fw-semibold">
+                            {{ agent.user.first_name }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Last Name</small>
+                        <div class="fw-semibold">
+                            {{ agent.user.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Username</small>
+                        <div class="fw-semibold">
+                            {{ agent.user.username }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Email</small>
+                        <div class="fw-semibold">
+                            {{ agent.user.email }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <small class="text-muted">Phone Number</small>
+                        <div class="fw-semibold">
+                            {{ agent.phone }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Employment Information -->
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body p-4">
+
+                    <h6 class="fw-bold mb-4">
+                        <i class="bi bi-briefcase me-2 text-success"></i>
+                        Employment Information
+                    </h6>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Agent Number</small>
+                        <div class="fw-semibold">
+                            {{ agent.agent_no }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Collection Area</small>
+                        <div class="fw-semibold">
+                            {{ agent.collection_area }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Daily Collection Target</small>
+                        <div class="fw-bold text-success fs-5">
+                            ₦{{ agent.daily_target|floatformat:2 }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Employment Date</small>
+                        <div class="fw-semibold">
+                            {{ agent.employment_date|date:"d M Y"|default:"Not provided" }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <small class="text-muted">Address</small>
+                        <div class="fw-semibold">
+                            {{ agent.address|default:"Not provided" }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card border-0 shadow-sm mt-4">
+
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+
+        <div>
+            <h6 class="fw-bold mb-1">Assigned Members</h6>
+            <small class="text-muted">
+                {{ assigned_members_count }} active member(s)
+            </small>
+        </div>
+
+        {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+        <a href="{% url 'members:assignment_create' %}"
+           class="btn btn-sm btn-success">
+            <i class="bi bi-person-plus me-1"></i>
+            Assign Member
+        </a>
+        {% endif %}
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-light">
+                <tr>
+                    <th>Member</th>
+                    <th>Phone</th>
+                    <th>Assigned Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for assignment in assignments %}
+
+                <tr>
+
+                    <td>
+                        <div class="fw-semibold">
+                            {{ assignment.member.full_name }}
+                        </div>
+
+                        <small class="text-muted">
+                            {{ assignment.member.member_no }}
+                        </small>
+                    </td>
+
+                    <td>{{ assignment.member.phone }}</td>
+
+                    <td>
+                        {{ assignment.assigned_at|date:"d M Y" }}
+                    </td>
+
+                    <td>
+                        <div class="d-flex gap-2">
+
+                            <a href="{% url 'members:member_detail' assignment.member.pk %}"
+                               class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+
+                            {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' %}
+                            <a href="{% url 'members:assignment_transfer' assignment.pk %}"
+                               class="btn btn-sm btn-outline-secondary">
+                                Transfer
+                            </a>
+                            {% endif %}
+
+                        </div>
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">
+                        No members have been assigned to this agent.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+        {% if request.user.role == 'ADMIN' %}
+
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body">
+
+        <h6 class="fw-bold mb-3">Agent Account Management</h6>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <a href="{% url 'agents:agent_update' agent.pk %}"
+               class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>
+                Edit Agent
+            </a>
+
+            {% if agent.status == 'ACTIVE' %}
+
+                <form method="POST"
+                      action="{% url 'agents:agent_deactivate' agent.pk %}">
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-danger"
+                            onclick="return confirm('Deactivate this agent?')">
+                        <i class="bi bi-person-x me-1"></i>
+                        Deactivate Agent
+                    </button>
+                </form>
+
+            {% else %}
+
+                <form method="POST"
+                      action="{% url 'agents:agent_activate' agent.pk %}">
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-success"
+                            onclick="return confirm('Reactivate this agent?')">
+                        <i class="bi bi-person-check me-1"></i>
+                        Reactivate Agent
+                    </button>
+                </form>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+
+{% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

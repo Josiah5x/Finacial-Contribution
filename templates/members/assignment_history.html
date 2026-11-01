@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <h4 class="fw-bold mb-1">Assignment History</h4>
+        <p class="text-muted mb-0">
+            {{ member.full_name }} — {{ member.member_no }}
+        </p>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white py-3">
+            <h6 class="fw-bold mb-0">Agent Assignment Records</h6>
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Agent</th>
+                        <th>Assigned By</th>
+                        <th>Assigned Date</th>
+                        <th>Ended Date</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for assignment in assignments %}
+
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">
+                                {{ assignment.agent.full_name }}
+                            </div>
+                            <small class="text-muted">
+                                {{ assignment.agent.agent_no }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {{ assignment.assigned_by|default:"System" }}
+                        </td>
+
+                        <td>
+                            {{ assignment.assigned_at|date:"d M Y, h:i A" }}
+                        </td>
+
+                        <td>
+                            {{ assignment.ended_at|date:"d M Y, h:i A"|default:"—" }}
+                        </td>
+
+                        <td>
+                            {% if assignment.is_active %}
+                                <span class="badge bg-success-subtle text-success">
+                                    Current
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">
+                                    Previous
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ assignment.notes|default:"—" }}</td>
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No assignment history found.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

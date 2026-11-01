@@ -1,0 +1,83 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Create Account | DailyCollect{% endblock %}
+
+{% block auth_content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="bi bi-wallet2 text-success"
+                               style="font-size: 45px;"></i>
+                        </div>
+
+                        <h3 class="fw-bold">Create Your Account</h3>
+
+                        <p class="text-muted">
+                            Join your contribution business on DailyCollect.
+                        </p>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field }}
+
+                                {% for error in field.errors %}
+                                    <small class="text-danger d-block">
+                                        {{ error }}
+                                    </small>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        <button type="submit"
+                                class="btn btn-success w-100 py-3 fw-bold">
+                            Create Account
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="text-muted">
+                            Already have an account?
+                            <a href="{% url 'accounts:login' %}"
+                               class="text-success fw-bold">
+                                Login
+                            </a>
+                        </p>
+                    </div>
+
+                    <div class="alert alert-info small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Your account will require administrator approval
+                        before you can log in.
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
