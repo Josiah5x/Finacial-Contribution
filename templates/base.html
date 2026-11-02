@@ -74,7 +74,12 @@
             <i class="bi bi-calendar-check"></i> Contribution Plans
         </a>
 
-        <a href="#" class="sidebar-link">
+        <a href="{% url 'contributions:enrollment_list' %}"
+            class="sidebar-link">
+            <i class="bi bi-person-check"></i>Member Enrolments
+        </a>
+
+        <a href="{% url 'collections:collection_list' %}" class="sidebar-link">
             <i class="bi bi-cash-stack"></i> Daily Collections
         </a>
 
@@ -130,7 +135,12 @@
             <i class="bi bi-calendar-check"></i> Contribution Plans
         </a>
 
-        <a href="#" class="sidebar-link">
+        <a href="{% url 'contributions:enrollment_list' %}"
+        class="sidebar-link">
+            <i class="bi bi-person-check"></i>Member Enrolments
+        </a>
+
+        <a href="{% url 'collections:collection_list' %}" class="sidebar-link">
             <i class="bi bi-cash-stack"></i> Daily Collections
         </a>
 

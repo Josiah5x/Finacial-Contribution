@@ -61,3 +61,65 @@ class ContributionPlanForm(forms.ModelForm):
 
     def clean_code(self):
         return self.cleaned_data['code'].strip().upper()
+
+
+from django import forms
+from members.models import Member
+from .models import ContributionPlan, PlanEnrollment
+
+
+class PlanEnrollmentForm(forms.ModelForm):
+
+    class Meta:
+        model = PlanEnrollment
+        fields = [
+            'member',
+            'plan',
+            'start_date',
+            'end_date',
+            'notes',
+        ]
+
+        widgets = {
+            'member': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'plan': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Optional enrolment notes'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['member'].queryset = Member.objects.filter(
+            status=Member.Status.ACTIVE
+        ).order_by('first_name', 'last_name')
+
+        self.fields['plan'].queryset = ContributionPlan.objects.filter(
+            is_active=True
+        ).order_by('name')
+
+        self.fields['member'].label_from_instance = (
+            lambda member: f'{member.member_no} - {member.full_name}'
+        )
+
+        self.fields['plan'].label_from_instance = (
+            lambda plan: f'{plan.name} - ₦{plan.amount:,.2f} ({plan.get_frequency_display()})'
+        )
+
+
+    

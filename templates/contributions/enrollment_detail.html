@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Enrolment Details | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <a href="{% url 'contributions:enrollment_list' %}"
+           class="text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Back to Enrolments
+        </a>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3">
+            <div>
+                <h4 class="fw-bold mb-1">Enrolment Details</h4>
+                <p class="text-muted mb-0">
+                    {{ enrollment.member.full_name }}
+                </p>
+            </div>
+
+            {% if enrollment.status == 'ACTIVE' %}
+            <form method="post"
+                  action="{% url 'contributions:enrollment_cancel' enrollment.pk %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="btn btn-outline-danger"
+                        onclick="return confirm('Are you sure you want to cancel this enrolment?')">
+                    <i class="bi bi-x-circle me-1"></i> Cancel Enrolment
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Agreed Contribution</small>
+                    <h3 class="fw-bold text-success mt-2">
+                        ₦{{ enrollment.agreed_amount|floatformat:2 }}
+                    </h3>
+                    <span class="text-muted">
+                        Per {{ enrollment.plan.get_frequency_display|lower }} collection
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Enrolment Status</small>
+                    <h4 class="mt-2">
+                        {% if enrollment.status == 'ACTIVE' %}
+                            <span class="badge bg-success">Active</span>
+                        {% elif enrollment.status == 'COMPLETED' %}
+                            <span class="badge bg-primary">Completed</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Cancelled</span>
+                        {% endif %}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Contribution Plan</small>
+                    <h5 class="fw-bold mt-2">{{ enrollment.plan.name }}</h5>
+                    <span class="text-muted">
+                        {{ enrollment.plan.code }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Member Information -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body p-4">
+
+            <h5 class="fw-bold mb-3">Member Information</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <small class="text-muted">Member Name</small>
+                    <p class="fw-semibold">{{ enrollment.member.full_name }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Member Number</small>
+                    <p class="fw-semibold">{{ enrollment.member.member_no }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Phone Number</small>
+                    <p class="fw-semibold">{{ enrollment.member.phone }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Email</small>
+                    <p class="fw-semibold">
+                        {{ enrollment.member.email|default:"Not provided" }}
+                    </p>
+                </div>
+
+            </div>
+
+            <a href="{% url 'members:member_detail' enrollment.member.pk %}"
+               class="btn btn-sm btn-outline-primary">
+                View Member Profile
+            </a>
+
+        </div>
+    </div>
+
+    <!-- Plan and Schedule -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body p-4">
+
+            <h5 class="fw-bold mb-3">Enrolment Information</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <small class="text-muted">Plan Frequency</small>
+                    <p class="fw-semibold">
+                        {{ enrollment.plan.get_frequency_display }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Start Date</small>
+                    <p class="fw-semibold">
+                        {{ enrollment.start_date|date:"d M Y" }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">End Date</small>
+                    <p class="fw-semibold">
+                        {{ enrollment.end_date|date:"d M Y"|default:"Ongoing" }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Enrolled By</small>
+                    <p class="fw-semibold">
+                        {{ enrollment.enrolled_by|default:"System" }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Assigned Collection Agent</small>
+                    <p class="fw-semibold">
+                        {% if assignment %}
+                            {{ assignment.agent.full_name }}
+                            ({{ assignment.agent.agent_no }})
+                        {% else %}
+                            No agent assigned
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Date Registered</small>
+                    <p class="fw-semibold">
+                        {{ enrollment.created_at|date:"d M Y, h:i A" }}
+                    </p>
+                </div>
+
+                <div class="col-12">
+                    <small class="text-muted">Notes</small>
+                    <p>{{ enrollment.notes|default:"No notes provided."|linebreaksbr }}</p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -10,6 +10,13 @@ from accounts.models import User
 from .models import ContributionPlan
 from .forms import ContributionPlanForm
 
+from django.db import IntegrityError, transaction
+from django.utils import timezone
+
+from members.models import Member
+from .models import PlanEnrollment
+from .forms import PlanEnrollmentForm
+
 
 # LIST CONTRIBUTION PLANS
 @login_required
@@ -160,3 +167,166 @@ def plan_toggle_status(request, pk):
         messages.success(request, 'Contribution plan deactivated.')
 
     return redirect('contributions:plan_detail', pk=plan.pk)
+
+
+@login_required
+@role_required(User.Role.ADMIN, User.Role.MANAGER)
+def enrollment_list(request):
+
+    enrollments = PlanEnrollment.objects.select_related(
+        'member',
+        'plan',
+        'enrolled_by'
+    )
+
+    search = request.GET.get('search', '').strip()
+    status = request.GET.get('status', '')
+
+    if search:
+        enrollments = enrollments.filter(
+            Q(member__member_no__icontains=search) |
+            Q(member__first_name__icontains=search) |
+            Q(member__last_name__icontains=search) |
+            Q(plan__name__icontains=search)
+        )
+
+    if status:
+        enrollments = enrollments.filter(status=status)
+
+    paginator = Paginator(enrollments, 15)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'page_obj': page_obj,
+        'enrollments': page_obj.object_list,
+        'search': search,
+        'selected_status': status,
+        'total_enrollments': PlanEnrollment.objects.count(),
+        'active_enrollments': PlanEnrollment.objects.filter(
+            status=PlanEnrollment.Status.ACTIVE
+        ).count(),
+        'completed_enrollments': PlanEnrollment.objects.filter(
+            status=PlanEnrollment.Status.COMPLETED
+        ).count(),
+        'cancelled_enrollments': PlanEnrollment.objects.filter(
+            status=PlanEnrollment.Status.CANCELLED
+        ).count(),
+        'status_choices': PlanEnrollment.Status.choices,
+    }
+
+    return render(
+        request,
+        'contributions/enrollment_list.html',
+        context
+    )
+
+
+
+@login_required
+@role_required(User.Role.ADMIN, User.Role.MANAGER)
+def enrollment_detail(request, pk):
+
+    enrollment = get_object_or_404(
+        PlanEnrollment.objects.select_related(
+            'member',
+            'plan',
+            'enrolled_by'
+        ),
+        pk=pk
+    )
+
+    assignment = MemberAssignment.objects.filter(
+        member=enrollment.member,
+        is_active=True
+    ).select_related('agent__user').first()
+
+    return render(
+        request,
+        'contributions/enrollment_detail.html',
+        {
+            'enrollment': enrollment,
+            'assignment': assignment,
+        }
+    )
+
+@login_required
+@role_required(User.Role.ADMIN, User.Role.MANAGER)
+def enrollment_create(request):
+
+    if request.method == 'POST':
+        form = PlanEnrollmentForm(request.POST)
+
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    enrollment = form.save(commit=False)
+
+                    enrollment.agreed_amount = enrollment.plan.amount
+                    enrollment.enrolled_by = request.user
+
+                    enrollment.full_clean()
+                    enrollment.save()
+
+                messages.success(
+                    request,
+                    'Member successfully enrolled in the contribution plan.'
+                )
+
+                return redirect(
+                    'contributions:enrollment_detail',
+                    pk=enrollment.pk
+                )
+
+            except IntegrityError:
+                form.add_error(
+                    None,
+                    'This member already has an active enrolment in this plan.'
+                )
+
+    else:
+        form = PlanEnrollmentForm()
+
+    return render(
+        request,
+        'contributions/enrollment_form.html',
+        {
+            'form': form,
+            'page_title': 'Enrol Member',
+        }
+    )
+
+
+@login_required
+@role_required(User.Role.ADMIN, User.Role.MANAGER)
+@require_POST
+def enrollment_cancel(request, pk):
+
+    with transaction.atomic():
+        enrollment = get_object_or_404(
+            PlanEnrollment.objects.select_for_update(),
+            pk=pk
+        )
+
+        if enrollment.status != PlanEnrollment.Status.ACTIVE:
+            messages.warning(
+                request,
+                'Only active enrolments can be cancelled.'
+            )
+            return redirect(
+                'contributions:enrollment_detail',
+                pk=pk
+            )
+
+        enrollment.status = PlanEnrollment.Status.CANCELLED
+        enrollment.save(update_fields=['status', 'updated_at'])
+
+    messages.success(request, 'Enrolment cancelled successfully.')
+
+    return redirect(
+        'contributions:enrollment_detail',
+        pk=pk
+    )
+
+
+
+

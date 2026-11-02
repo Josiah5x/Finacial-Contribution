@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Collection Receipt | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Collection Details</h4>
+            <p class="text-muted mb-0">Payment receipt and collection information.</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-outline-primary">
+                <i class="bi bi-printer"></i> Print Receipt
+            </button>
+
+            <a href="{% url 'collections:collection_list' %}"
+               class="btn btn-light">
+                Back
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" id="receipt">
+        <div class="card-body p-4 p-md-5">
+
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-success">DailyCollect</h3>
+                <p class="text-muted mb-1">Daily Contribution Receipt</p>
+                <h5 class="fw-bold mt-3">{{ collection.receipt_no }}</h5>
+
+                {% if collection.status == 'VERIFIED' %}
+                    <span class="badge bg-success">Verified</span>
+                {% elif collection.status == 'PENDING' %}
+                    <span class="badge bg-warning text-dark">Pending Verification</span>
+                {% else %}
+                    <span class="badge bg-danger">Rejected</span>
+                {% endif %}
+            </div>
+
+            <hr>
+
+            <div class="row g-4">
+
+                <div class="col-md-6">
+                    <small class="text-muted">Member</small>
+                    <h6 class="fw-bold">
+                        {{ collection.enrollment.member.full_name }}
+                    </h6>
+                    <p class="mb-1">
+                        Member No: {{ collection.enrollment.member.member_no }}
+                    </p>
+                    <p class="mb-0">
+                        Phone: {{ collection.enrollment.member.phone }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Contribution Plan</small>
+                    <h6 class="fw-bold">
+                        {{ collection.enrollment.plan.name }}
+                    </h6>
+                    <p class="mb-1">
+                        Agreed Amount:
+                        ₦{{ collection.enrollment.agreed_amount|floatformat:2 }}
+                    </p>
+                    <p class="mb-0">
+                        Frequency:
+                        {{ collection.enrollment.plan.get_frequency_display }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Collection Agent</small>
+                    <h6 class="fw-bold">
+                        {{ collection.assignment.agent.full_name }}
+                    </h6>
+                    <p class="mb-0">
+                        {{ collection.assignment.agent.agent_no }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <small class="text-muted">Payment Information</small>
+                    <h6 class="fw-bold">
+                        {{ collection.get_payment_method_display }}
+                    </h6>
+                    <p class="mb-1">
+                        Date: {{ collection.collection_date|date:"d M Y" }}
+                    </p>
+                    {% if collection.transaction_reference %}
+                    <p class="mb-0">
+                        Reference: {{ collection.transaction_reference }}
+                    </p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <hr class="my-4">
+
+            <div class="text-center py-3">
+                <small class="text-muted">Amount Collected</small>
+                <h2 class="fw-bold text-success mt-2">
+                    ₦{{ collection.amount|floatformat:2 }}
+                </h2>
+            </div>
+
+            {% if collection.notes %}
+            <div class="alert alert-light border">
+                <strong>Notes:</strong>
+                {{ collection.notes }}
+            </div>
+            {% endif %}
+
+            {% if collection.status == 'VERIFIED' %}
+                <div class="alert alert-success">
+                    Verified by {{ collection.verified_by.get_full_name|default:collection.verified_by.username }}
+                    on {{ collection.verified_at|date:"d M Y, h:i A" }}
+                </div>
+            {% elif collection.status == 'REJECTED' %}
+                <div class="alert alert-danger">
+                    <strong>Rejection reason:</strong>
+                    {{ collection.rejection_reason|default:"No reason supplied." }}
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    This payment is awaiting verification.
+                </div>
+            {% endif %}
+
+            {% if collection.status == 'PENDING' and request.user.role == 'ADMIN' or collection.status == 'PENDING' and request.user.role == 'MANAGER' %}
+
+<div class="card border-0 bg-light mt-4">
+    <div class="card-body">
+
+        <h6 class="fw-bold mb-3">Payment Verification</h6>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+
+            <form method="POST"
+                  action="{% url 'collections:collection_verify' collection.pk %}"
+                  onsubmit="return confirm('Confirm that this payment has been received and verify it?');">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i>
+                    Verify Payment
+                </button>
+            </form>
+
+        </div>
+
+        <form method="POST"
+              action="{% url 'collections:collection_reject' collection.pk %}">
+
+            {% csrf_token %}
+
+            <label class="form-label fw-semibold">
+                Rejection Reason
+            </label>
+
+            <textarea name="rejection_reason"
+                      class="form-control mb-2"
+                      rows="3"
+                      placeholder="Explain why this payment is being rejected..."
+                      required></textarea>
+
+            <button type="submit"
+                    class="btn btn-danger"
+                    onclick="return confirm('Are you sure you want to reject this payment?');">
+                <i class="bi bi-x-circle"></i>
+                Reject Payment
+            </button>
+
+        </form>
+
+    </div>
+</div>
+
+{% endif %}
+
+            <hr>
+
+            <div class="text-center">
+                <small class="text-muted">
+                    Recorded by {{ collection.collected_by.get_full_name|default:collection.collected_by.username }}
+                </small>
+                <p class="text-muted small mt-2 mb-0">
+                    Thank you for contributing with DailyCollect.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #receipt,
+    #receipt * {
+        visibility: visible;
+    }
+
+    #receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

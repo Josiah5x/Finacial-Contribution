@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Collections | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold mb-1">Daily Collections</h4>
+            <p class="text-muted mb-0">
+                Monitor and manage member contribution payments.
+            </p>
+        </div>
+
+        <a href="{% url 'collections:collection_create' %}"
+           class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Record Collection
+        </a>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Total Recorded</small>
+                    <h4 class="fw-bold mt-2">
+                        ₦{{ total_amount|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Pending Verification</small>
+                    <h4 class="fw-bold text-warning mt-2">
+                        ₦{{ pending_amount|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Verified Collections</small>
+                    <h4 class="fw-bold text-success mt-2">
+                        ₦{{ verified_amount|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Search and filter -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+
+            <form method="GET" class="row g-2">
+
+                <div class="col-md-6">
+                    <input type="text"
+                           name="q"
+                           value="{{ search }}"
+                           class="form-control"
+                           placeholder="Search receipt, member or reference...">
+                </div>
+
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}"
+                                {% if selected_status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+
+                    <a href="{% url 'collections:collection_list' %}"
+                       class="btn btn-light">
+                        Reset
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Collection table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Receipt No.</th>
+                            <th>Member</th>
+                            <th>Plan</th>
+                            <th>Amount</th>
+                            <th>Payment</th>
+                            <th>Agent</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for item in collections %}
+                        <tr>
+                            <td class="fw-semibold">
+                                {{ item.receipt_no }}
+                            </td>
+
+                            <td>
+                                <div class="fw-semibold">
+                                    {{ item.enrollment.member.full_name }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ item.enrollment.member.member_no }}
+                                </small>
+                            </td>
+
+                            <td>{{ item.enrollment.plan.name }}</td>
+
+                            <td class="fw-semibold">
+                                ₦{{ item.amount|floatformat:2 }}
+                            </td>
+
+                            <td>{{ item.get_payment_method_display }}</td>
+
+                            <td>{{ item.assignment.agent.full_name }}</td>
+
+                            <td>{{ item.collection_date|date:"d M Y" }}</td>
+
+                            <td>
+                                {% if item.status == 'VERIFIED' %}
+                                    <span class="badge bg-success">Verified</span>
+                                {% elif item.status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'collections:collection_detail' item.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <i class="bi bi-wallet2 fs-1 text-muted"></i>
+                                <p class="text-muted mt-2 mb-0">
+                                    No collection records found.
+                                </p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-3">
+                <ul class="pagination justify-content-end">
+
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}&q={{ search|urlencode }}&status={{ selected_status|urlencode }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}&q={{ search|urlencode }}&status={{ selected_status|urlencode }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

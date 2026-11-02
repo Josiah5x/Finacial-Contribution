@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <a href="{% url 'contributions:enrollment_list' %}"
+           class="text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Back to Enrolments
+        </a>
+
+        <h4 class="fw-bold mt-3">{{ page_title }}</h4>
+        <p class="text-muted">
+            Register a member under a contribution plan.
+        </p>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Select Member</label>
+                        {{ form.member }}
+                        {{ form.member.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Contribution Plan</label>
+                        {{ form.plan }}
+                        {{ form.plan.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Start Date</label>
+                        {{ form.start_date }}
+                        {{ form.start_date.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">End Date</label>
+                        {{ form.end_date }}
+                        <small class="text-muted">
+                            Leave blank if the plan has no fixed end date.
+                        </small>
+                        {{ form.end_date.errors }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {{ form.notes.errors }}
+                    </div>
+
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'contributions:enrollment_list' %}"
+                       class="btn btn-light">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Enrol Member
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
