@@ -97,6 +97,38 @@
                     {% endif %}
                 </div>
 
+                <div class="row g-3 mt-3">
+
+                {% if collection.verified_by %}
+                <div class="col-md-6">
+                    <div class="border rounded p-3">
+                        <small class="text-muted">Verified By</small>
+                        <h6 class="fw-bold mt-1">
+                            {{ collection.verified_by.get_full_name|default:collection.verified_by.username }}
+                        </h6>
+                        <small class="text-muted">
+                            {{ collection.verified_at|date:"d M Y, h:i A" }}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if collection.rejected_by %}
+                <div class="col-md-6">
+                    <div class="border rounded p-3">
+                        <small class="text-muted">Rejected By</small>
+                        <h6 class="fw-bold mt-1">
+                            {{ collection.rejected_by.get_full_name|default:collection.rejected_by.username }}
+                        </h6>
+                        <small class="text-muted">
+                            {{ collection.rejected_at|date:"d M Y, h:i A" }}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
             </div>
 
             <hr class="my-4">
