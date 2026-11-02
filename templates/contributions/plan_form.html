@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <a href="{% url 'contributions:plan_list' %}"
+           class="text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Back to Plans
+        </a>
+
+        <h4 class="fw-bold mt-3">{{ page_title }}</h4>
+        <p class="text-muted">Enter the contribution plan details below.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Plan Name</label>
+                        {{ form.name }}
+                        {{ form.name.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Plan Code</label>
+                        {{ form.code }}
+                        {{ form.code.errors }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Contribution Frequency</label>
+                        {{ form.frequency }}
+                        {{ form.frequency.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Amount per Collection (₦)</label>
+                        {{ form.amount }}
+                        {{ form.amount.errors }}
+                    </div>
+
+                    <div class="col-md-6" id="weekday-field">
+                        <label class="form-label">Collection Weekday</label>
+                        {{ form.collection_weekday }}
+                        {{ form.collection_weekday.errors }}
+                    </div>
+
+                    <div class="col-md-6" id="monthly-field">
+                        <label class="form-label">Collection Day of Month</label>
+                        {{ form.collection_day }}
+                        <small class="text-muted">Choose a day between 1 and 28.</small>
+                        {{ form.collection_day.errors }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Duration (Days)</label>
+                        {{ form.duration_days }}
+                        <small class="text-muted">Leave blank for an ongoing plan.</small>
+                        {{ form.duration_days.errors }}
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div class="form-check mt-3">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Active Plan
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'contributions:plan_list' %}"
+                       class="btn btn-light">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Save Plan
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const frequency = document.getElementById('id_frequency');
+    const weekdayField = document.getElementById('weekday-field');
+    const monthlyField = document.getElementById('monthly-field');
+
+    function updateScheduleFields() {
+        weekdayField.style.display =
+            frequency.value === 'WEEKLY' ? '' : 'none';
+
+        monthlyField.style.display =
+            frequency.value === 'MONTHLY' ? '' : 'none';
+    }
+
+    frequency.addEventListener('change', updateScheduleFields);
+    updateScheduleFields();
+});
+</script>
+{% endblock %}

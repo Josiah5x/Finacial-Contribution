@@ -531,13 +531,13 @@ h1, h2, h3, h4, h5, h6 {
 
         :root {
             --sidebar-width: 255px;
-            --primary: #0b315b;
+            --primary: #055fc6;
             --accent: #16a36a;
             --body-bg: #f4f7fb;
             --card-bg: #ffffff;
             --text-main: #24364b;
             --border-color: #e5eaf0;
-            --sidebar-bg: #08264b;
+            --sidebar-bg: #067739;
         }
 
         [data-bs-theme="dark"] {
