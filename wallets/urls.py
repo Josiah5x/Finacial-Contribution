@@ -1,7 +1,9 @@
 from django.urls import path
+from . import views
 
 app_name = 'wallets'
 
 urlpatterns = [
-    # Member URLs will be added here
+    path('', views.wallet_list, name='wallet_list'),
+    path('<int:pk>/', views.wallet_detail, name='wallet_detail'),
 ]

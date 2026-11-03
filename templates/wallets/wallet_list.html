@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Member Wallets | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h4 class="fw-bold mb-1">
+            {% if request.user.role == 'MEMBER' %}
+                My Wallet
+            {% else %}
+                Member Wallets
+            {% endif %}
+        </h4>
+        <p class="text-muted mb-0">
+            View wallet balances and contribution transaction records.
+        </p>
+    </div>
+
+    {% if request.user.role != 'MEMBER' %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-2">
+                <div class="col-md-8">
+                    <input type="text"
+                           name="q"
+                           value="{{ search }}"
+                           class="form-control"
+                           placeholder="Search member number, name or phone...">
+                </div>
+
+                <div class="col-md-4 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+
+                    <a href="{% url 'wallets:wallet_list' %}"
+                       class="btn btn-light">
+                        Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Member Number</th>
+                            <th>Member Name</th>
+                            <th>Phone</th>
+                            <th>Wallet Balance</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for wallet in wallets %}
+                        <tr>
+                            <td class="fw-semibold">
+                                {{ wallet.member.member_no }}
+                            </td>
+
+                            <td>{{ wallet.member.full_name }}</td>
+
+                            <td>{{ wallet.member.phone }}</td>
+
+                            <td class="fw-bold text-success">
+                                ₦{{ wallet.balance|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                {% if wallet.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'wallets:wallet_detail' wallet.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View Wallet
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="bi bi-wallet2 fs-1 text-muted"></i>
+                                <p class="text-muted mt-2 mb-0">
+                                    No wallet records found.
+                                </p>
+                                <small class="text-muted">
+                                    A member wallet is created automatically
+                                    after their first verified collection.
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-3">
+                <ul class="pagination justify-content-end">
+
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}&q={{ search|urlencode }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}&q={{ search|urlencode }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

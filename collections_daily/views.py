@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction, IntegrityError
+from django.core.exceptions import ValidationError
 from django.db.models import Sum, Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
@@ -15,6 +16,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import CollectionRejectionForm
+from wallets.services import credit_collection
 
 User = get_user_model()
 
@@ -160,48 +162,59 @@ def collection_detail(request, pk):
 @login_required
 @role_required(User.Role.ADMIN, User.Role.MANAGER)
 @require_POST
+@login_required
+@role_required(User.Role.ADMIN, User.Role.MANAGER)
+@require_POST
 def collection_verify(request, pk):
-    with transaction.atomic():
-        collection = get_object_or_404(
-            Collection.objects.select_for_update(),
-            pk=pk,
+
+    try:
+        with transaction.atomic():
+
+            collection = get_object_or_404(
+                Collection.objects.select_for_update(),
+                pk=pk,
+            )
+
+            if collection.status != Collection.Status.PENDING:
+                messages.warning(
+                    request,
+                    'This collection has already been processed.'
+                )
+                return redirect(
+                    'collections:collection_detail',
+                    pk=collection.pk,
+                )
+
+            collection.status = Collection.Status.VERIFIED
+            collection.verified_by = request.user
+            collection.verified_at = timezone.now()
+
+            collection.save(update_fields=[
+                'status',
+                'verified_by',
+                'verified_at',
+                'updated_at',
+            ])
+
+            # Automatically credit the member wallet.
+            wallet_transaction = credit_collection(
+                collection,
+                user=request.user,
+            )
+
+        messages.success(
+            request,
+            f'Payment verified successfully. '
+            f'₦{wallet_transaction.amount:,.2f} '
+            f'credited to the member wallet.'
         )
 
-        if collection.status != Collection.Status.PENDING:
-            messages.warning(
-                request,
-                'This collection has already been processed.'
-            )
-            return redirect(
-                'collections:collection_detail',
-                pk=collection.pk,
-            )
-
-        collection.status = Collection.Status.VERIFIED
-        collection.verified_by = request.user
-        collection.verified_at = timezone.now()
-        collection.rejection_reason = ''
-        collection.rejected_by = None
-        collection.rejected_at = None
-
-        collection.save(update_fields=[
-            'status',
-            'verified_by',
-            'verified_at',
-            'rejection_reason',
-            'rejected_by',
-            'rejected_at',
-            'updated_at',
-        ])
-
-    messages.success(
-        request,
-        f'Collection {collection.receipt_no} has been verified.'
-    )
+    except ValidationError as error:
+        messages.error(request, ' '.join(error.messages))
 
     return redirect(
         'collections:collection_detail',
-        pk=collection.pk,
+        pk=pk,
     )
 
 
