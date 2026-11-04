@@ -13,7 +13,7 @@ from .forms import ContributionPlanForm
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from members.models import Member
+from members.models import Member,MemberAssignment
 from .models import PlanEnrollment
 from .forms import PlanEnrollmentForm
 

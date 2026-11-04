@@ -123,13 +123,24 @@ def user_update(request, pk):
     })
 
 
-class CustomPasswordChangeView(PasswordChangeView):
+from django.contrib.auth.views import PasswordChangeView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+
+
+class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
     template_name = 'accounts/change_password.html'
-    success_url = reverse_lazy('accounts:change_password')
+    success_url = reverse_lazy('dashboard')
 
     def form_valid(self, form):
-        messages.success(self.request, 'Password changed successfully.')
-        return super().form_valid(form)
+        # Save the new password and update the user's session.
+        response = super().form_valid(form)
+
+        # Allow the user to access the dashboard after changing password.
+        self.request.user.must_change_password = False
+        self.request.user.save(update_fields=['must_change_password'])
+
+        return response
 
 
 from django.contrib.auth.decorators import login_required

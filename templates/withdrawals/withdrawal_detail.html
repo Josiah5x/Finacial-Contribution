@@ -1,0 +1,246 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{ withdrawal.request_no }} | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'withdrawals:withdrawal_list' %}"
+               class="text-decoration-none">
+                <i class="bi bi-arrow-left"></i> Back to Withdrawals
+            </a>
+            <h3 class="fw-bold mt-2">{{ withdrawal.request_no }}</h3>
+            <p class="text-muted mb-0">Withdrawal request details</p>
+        </div>
+
+        {% if withdrawal.status == 'PENDING' %}
+            <span class="badge bg-warning text-dark fs-6">Pending Review</span>
+        {% elif withdrawal.status == 'APPROVED' %}
+            <span class="badge bg-primary fs-6">Approved</span>
+        {% elif withdrawal.status == 'PAID' %}
+            <span class="badge bg-success fs-6">Paid</span>
+        {% elif withdrawal.status == 'REJECTED' %}
+            <span class="badge bg-danger fs-6">Rejected</span>
+        {% else %}
+            <span class="badge bg-secondary fs-6">{{ withdrawal.get_status_display }}</span>
+        {% endif %}
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Request details -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+
+                    <h5 class="fw-bold mb-3">Request Information</h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">Member</small>
+                            <h6>{{ withdrawal.member.full_name }}</h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">Member Number</small>
+                            <h6>{{ withdrawal.member.member_no }}</h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">Withdrawal Amount</small>
+                            <h4 class="fw-bold text-primary">
+                                ₦{{ withdrawal.amount|floatformat:2 }}
+                            </h4>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">Request Date</small>
+                            <h6>{{ withdrawal.created_at|date:"d M Y, h:i A" }}</h6>
+                        </div>
+
+                        <div class="col-12">
+                            <small class="text-muted">Reason</small>
+                            <p>{{ withdrawal.reason|default:"No reason provided."|linebreaksbr }}</p>
+                        </div>
+
+                        <div class="col-12">
+                            <small class="text-muted">Requested By</small>
+                            <h6>{{ withdrawal.requested_by.get_full_name|default:withdrawal.requested_by.username }}</h6>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Approval information -->
+            {% if withdrawal.approved_by %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold">Approval Information</h5>
+                    <p class="mb-1">
+                        Approved by:
+                        <strong>{{ withdrawal.approved_by.get_full_name|default:withdrawal.approved_by.username }}</strong>
+                    </p>
+                    <p class="text-muted mb-0">
+                        {{ withdrawal.approved_at|date:"d M Y, h:i A" }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if withdrawal.status == 'REJECTED' %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-danger">Rejection Information</h5>
+                    <p>{{ withdrawal.rejection_reason }}</p>
+                    {% if withdrawal.rejected_by %}
+                        <small class="text-muted">
+                            Rejected by {{ withdrawal.rejected_by.get_full_name|default:withdrawal.rejected_by.username }}
+                            on {{ withdrawal.rejected_at|date:"d M Y, h:i A" }}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if withdrawal.status == 'PAID' %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-success">Payment Information</h5>
+
+                    <p class="mb-1">
+                        Payment method:
+                        <strong>{{ withdrawal.get_payment_method_display }}</strong>
+                    </p>
+
+                    <p class="mb-1">
+                        Reference:
+                        {{ withdrawal.payment_reference|default:"N/A" }}
+                    </p>
+
+                    <p class="mb-1">
+                        Paid by:
+                        {{ withdrawal.paid_by.get_full_name|default:withdrawal.paid_by.username }}
+                    </p>
+
+                    <p class="mb-0">
+                        Paid on:
+                        {{ withdrawal.paid_at|date:"d M Y, h:i A" }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div class="col-lg-5">
+
+            {% if withdrawal.status == 'PENDING' and request.user.role == 'ADMIN' or withdrawal.status == 'PENDING' and request.user.role == 'MANAGER' %}
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Review Request</h5>
+
+                    <form method="post"
+                          action="{% url 'withdrawals:withdrawal_approve' withdrawal.pk %}"
+                          class="mb-3">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100"
+                                onclick="return confirm('Approve this withdrawal request?')">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Approve Request
+                        </button>
+                    </form>
+
+                    <hr>
+
+                    <form method="post"
+                          action="{% url 'withdrawals:withdrawal_reject' withdrawal.pk %}">
+                        {% csrf_token %}
+
+                        <label class="form-label fw-semibold">
+                            Rejection Reason
+                        </label>
+
+                        <textarea name="rejection_reason"
+                                  class="form-control mb-3"
+                                  rows="3"
+                                  required
+                                  placeholder="Enter reason for rejection"></textarea>
+
+                        <button type="submit"
+                                class="btn btn-outline-danger w-100"
+                                onclick="return confirm('Reject this withdrawal request?')">
+                            Reject Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% endif %}
+
+            {% if withdrawal.status == 'APPROVED' and request.user.role == 'ADMIN' or withdrawal.status == 'APPROVED' and request.user.role == 'ACCOUNTANT' %}
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Process Payment</h5>
+
+                    <form method="post"
+                          action="{% url 'withdrawals:withdrawal_pay' withdrawal.pk %}">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select name="payment_method" class="form-select" required>
+                                <option value="">Select payment method</option>
+                                <option value="CASH">Cash</option>
+                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Payment Reference</label>
+                            <input type="text"
+                                   name="payment_reference"
+                                   class="form-control"
+                                   placeholder="Bank reference (if applicable)">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes"
+                                      class="form-control"
+                                      rows="3"></textarea>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            Confirm that payment has actually been made before proceeding.
+                            This action will debit the member's wallet.
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-success w-100"
+                                onclick="return confirm('Confirm payment and debit this wallet?')">
+                            <i class="bi bi-cash-stack me-1"></i>
+                            Confirm Payment
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% endif %}
+
+            {% if withdrawal.status == 'PAID' %}
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                This withdrawal has been paid and the wallet has been debited.
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

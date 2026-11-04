@@ -47,6 +47,14 @@ class WalletTransaction(models.Model):
         related_name='wallet_transaction',
     )
 
+    withdrawal = models.OneToOneField(
+    'withdrawals.Withdrawal',
+    on_delete=models.PROTECT,
+    null=True,
+    blank=True,
+    related_name='wallet_transaction'
+    )
+
     transaction_type = models.CharField(
         max_length=10,
         choices=TransactionType.choices,

@@ -99,7 +99,7 @@
             <i class="bi bi-box-arrow-down"></i> Withdrawals
         </a>
 
-        <a href="{% url 'wallets:wallet_list' %}" class="nav-link">
+        <a href="{% url 'wallets:wallet_list' %}" class="sidebar-link">
             <i class="bi bi-wallet2"></i>Wallet Management
         </a>
 
@@ -279,6 +279,15 @@
             <i class="bi bi-box-arrow-down"></i> Request Withdrawal
         </a>
 
+    {% endif %}
+
+    {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' or request.user.role == 'ACCOUNTANT' or request.user.role == 'MEMBER' %}
+        <li class="nav-item">
+            <a href="{% url 'withdrawals:withdrawal_list' %}" class="nav-link">
+                <i class="bi bi-wallet2 me-2"></i>
+                <span>Withdrawals</span>
+            </a>
+        </li>
     {% endif %}
 
 </div>

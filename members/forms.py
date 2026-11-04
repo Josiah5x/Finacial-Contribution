@@ -1,7 +1,9 @@
 from agents.models import Agent
 from .models import Member, MemberAssignment
 from django import forms
-from .models import Member
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+
 
 
 class MemberForm(forms.ModelForm):
@@ -76,6 +78,88 @@ class MemberForm(forms.ModelForm):
             )
 
         return phone
+
+
+
+
+
+class MemberCreateForm(MemberForm):
+
+    username = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter login username'
+        })
+    )
+
+    password1 = forms.CharField(
+        label='Initial Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Set initial password'
+        })
+    )
+
+    password2 = forms.CharField(
+        label='Confirm Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm password'
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].required = True
+
+    def clean_username(self):
+        username = self.cleaned_data['username'].strip()
+
+        User = get_user_model()
+
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError(
+                'This username is already in use.'
+            )
+
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+
+        User = get_user_model()
+
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                'This email already has an account.'
+            )
+
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+
+        if password1 and password2:
+            if password1 != password2:
+                self.add_error(
+                    'password2',
+                    'Passwords do not match.'
+                )
+            else:
+                user = get_user_model()(
+                    username=cleaned_data.get('username'),
+                    email=cleaned_data.get('email')
+                )
+                try:
+                    validate_password(password1, user)
+                except forms.ValidationError as error:
+                    self.add_error('password1', error)
+
+        return cleaned_data
 
 
 

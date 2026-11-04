@@ -15,37 +15,70 @@ from accounts.models import User
 from .forms import MemberForm,MemberAssignment
 from .models import Member
 
+from django.contrib.auth import get_user_model
+from .forms import MemberCreateForm
+
 
 
 
 
 @login_required
-@role_required(User.Role.ADMIN, User.Role.MANAGER)
+@role_required(User.Role.ADMIN)
 def member_create(request):
 
     if request.method == 'POST':
-        form = MemberForm(request.POST, request.FILES)
+        form = MemberCreateForm(request.POST, request.FILES)
 
         if form.is_valid():
-            member = form.save(commit=False)
-            member.created_by = request.user
-            member.save()
+            UserModel = get_user_model()
+
+            with transaction.atomic():
+
+                member = form.save(commit=False)
+
+                # Create login account
+                user = UserModel.objects.create_user(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password1'],
+                first_name=member.first_name,
+                last_name=member.last_name,
+                phone=member.phone,
+                role=UserModel.Role.MEMBER,
+                is_active=True,
+                must_change_password=True,
+                )
+
+                # Link account to member profile
+                member.user = user
+                member.status = Member.Status.ACTIVE
+                member.created_by = request.user
+                member.save()
 
             messages.success(
                 request,
-                f'{member.full_name} registered successfully.'
+                f'Member {member.full_name} created successfully. '
+                f'Username: {user.username}'
             )
 
-            return redirect('members:member_list')
+            return redirect(
+                'members:member_detail',
+                pk=member.pk
+            )
 
     else:
-        form = MemberForm()
+        form = MemberCreateForm()
 
     return render(
         request,
         'members/member_form.html',
-        {'form': form, 'page_title': 'Register New Member'}
+        {
+            'form': form,
+            'title': 'Register New Member',
+            'is_create': True,
+        }
     )
+
 
 
 @login_required
