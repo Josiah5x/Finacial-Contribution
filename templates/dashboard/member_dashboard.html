@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Member Dashboard | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Welcome -->
+    <div class="mb-4">
+        <h3 class="fw-bold">
+            Welcome back, {{ request.user.first_name|default:request.user.username }}!
+        </h3>
+        <p class="text-muted">
+            Here is an overview of your daily contributions.
+        </p>
+    </div>
+
+    {% if not member %}
+        <div class="alert alert-warning">
+            Your member profile has not been linked to your account.
+            Please contact the administrator.
+        </div>
+    {% else %}
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Wallet Balance</div>
+                    <h3 class="fw-bold text-success mt-2">
+                        ₦{{ wallet.balance|default:0|floatformat:2 }}
+                    </h3>
+                    <small class="text-muted">Available balance</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Total Contributions</div>
+                    <h3 class="fw-bold mt-2">
+                        ₦{{ total_contributions|floatformat:2 }}
+                    </h3>
+                    <small class="text-muted">Verified payments</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Active Plans</div>
+                    <h3 class="fw-bold mt-2">
+                        {{ enrollments.count }}
+                    </h3>
+                    <small class="text-muted">Your enrolled plans</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Membership Status</div>
+                    <h3 class="fw-bold mt-2">
+                        {{ member.get_status_display }}
+                    </h3>
+                    <small class="text-muted">Member account</small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Quick Actions</h5>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/withdrawals/create/" class="btn btn-success">
+                    Request Withdrawal
+                </a>
+
+                <a href="/withdrawals/" class="btn btn-outline-primary">
+                    My Withdrawals
+                </a>
+
+                <a href="/wallets/" class="btn btn-outline-secondary">
+                    My Wallet
+                </a>
+
+                <a href="{% url 'accounts:profile' %}"
+                   class="btn btn-outline-secondary">
+                    My Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Plans -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">My Active Contribution Plans</h5>
+
+            {% for enrollment in enrollments %}
+                <div class="d-flex justify-content-between align-items-center
+                            border-bottom py-3">
+                    <div>
+                        <h6 class="mb-1">{{ enrollment.plan.name }}</h6>
+                        <small class="text-muted">
+                            {{ enrollment.plan.get_frequency_display }}
+                        </small>
+                    </div>
+
+                    <div class="text-end">
+                        <strong class="text-success">
+                            ₦{{ enrollment.agreed_amount|floatformat:2 }}
+                        </strong>
+                        <div>
+                            <small class="text-muted">Contribution amount</small>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted mb-0">
+                    You are not enrolled in any active contribution plan.
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Recent Contributions -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Recent Contributions</h5>
+
+                    {% for collection in recent_collections %}
+                        <div class="d-flex justify-content-between
+                                    border-bottom py-3">
+                            <div>
+                                <strong>{{ collection.receipt_no }}</strong>
+                                <div class="small text-muted">
+                                    {{ collection.collection_date|date:"d M Y" }}
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <strong>
+                                    ₦{{ collection.amount|floatformat:2 }}
+                                </strong>
+                                <div class="small">
+                                    {{ collection.get_status_display }}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">
+                            No contributions recorded yet.
+                        </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Withdrawals -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Recent Withdrawals</h5>
+
+                    {% for withdrawal in recent_withdrawals %}
+                        <div class="d-flex justify-content-between
+                                    border-bottom py-3">
+                            <div>
+                                <strong>{{ withdrawal.request_no }}</strong>
+                                <div class="small text-muted">
+                                    {{ withdrawal.created_at|date:"d M Y" }}
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <strong>
+                                    ₦{{ withdrawal.amount|floatformat:2 }}
+                                </strong>
+                                <div class="small">
+                                    {{ withdrawal.get_status_display }}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">
+                            No withdrawal requests yet.
+                        </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

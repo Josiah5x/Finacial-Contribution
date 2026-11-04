@@ -5,9 +5,75 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils import timezone
 
+from django.shortcuts import render, redirect
+from django.core.exceptions import ObjectDoesNotExist
+
+from collections_daily.models import Collection
+from withdrawals.models import Withdrawal
 from members.models import Member
+from django.db.models import Sum
 
 User = get_user_model()
+
+
+
+
+@login_required
+def member_dashboard(request):
+    # Only members can access this dashboard.
+    if request.user.role == 'MEMBER':
+        return redirect('member_dashboard')
+    
+    if request.user.role != 'MEMBER':
+        return redirect('dashboard')
+
+    member = Member.objects.filter(user=request.user).first()
+
+    if not member:
+        return render(request, 'dashboard/member_dashboard.html', {
+            'member': None,
+            'wallet': None,
+            'enrollments': [],
+            'recent_collections': [],
+            'recent_withdrawals': [],
+            'total_contributions': 0,
+        })
+
+    # Get member wallet safely.
+    try:
+        wallet = member.wallet
+    except ObjectDoesNotExist:
+        wallet = None
+
+    enrollments = member.plan_enrollments.filter(
+        status='ACTIVE'
+    ).select_related('plan')
+
+    recent_collections = Collection.objects.filter(
+        enrollment__member=member
+    ).select_related(
+        'enrollment__plan'
+    ).order_by('-created_at')[:5]
+
+    recent_withdrawals = Withdrawal.objects.filter(
+        member=member
+    ).order_by('-created_at')[:5]
+
+    total_contributions = Collection.objects.filter(
+    enrollment__member=member,
+    status='VERIFIED'
+    ).aggregate(total=Sum('amount'))['total'] or 0
+
+    context = {
+        'member': member,
+        'wallet': wallet,
+        'enrollments': enrollments,
+        'recent_collections': recent_collections,
+        'recent_withdrawals': recent_withdrawals,
+        'total_contributions': total_contributions,
+    }
+
+    return render(request, 'dashboard/member_dashboard.html', context)
 
 
 
