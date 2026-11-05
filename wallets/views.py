@@ -5,9 +5,15 @@ from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 
 from accounts.decorators import role_required
-from .models import Wallet
+
+from django.shortcuts import render, redirect
+
+from members.models import Member
+from .models import Wallet, WalletTransaction
 
 User = get_user_model()
+
+
 
 
 @login_required
@@ -87,3 +93,47 @@ def wallet_detail(request, pk):
     }
 
     return render(request, 'wallets/wallet_detail.html', context)
+
+# ////////////////////////////
+@login_required
+def member_transactions(request):
+    if request.user.role != 'MEMBER':
+        return redirect('dashboard')
+
+    member = Member.objects.filter(user=request.user).first()
+
+    if not member:
+        return redirect('dashboard')
+
+    wallet = Wallet.objects.filter(member=member).first()
+
+    if not wallet:
+        transactions = WalletTransaction.objects.none()
+    else:
+        transactions = WalletTransaction.objects.filter(
+            wallet=wallet
+        ).order_by('-created_at')
+
+    transaction_type = request.GET.get('type', '')
+
+    if transaction_type in ['CREDIT', 'DEBIT']:
+        transactions = transactions.filter(
+            transaction_type=transaction_type
+        )
+
+    paginator = Paginator(transactions, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'member': member,
+        'wallet': wallet,
+        'transactions': page_obj,
+        'page_obj': page_obj,
+        'transaction_type': transaction_type,
+    }
+
+    return render(
+        request,
+        'wallets/member_transactions.html',
+        context
+    )

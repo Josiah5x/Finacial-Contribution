@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Transaction History | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Transaction History</h3>
+            <p class="text-muted mb-0">
+                View all credits and debits on your wallet.
+            </p>
+        </div>
+
+        <a href="{% url 'wallets:wallet_list' %}"
+           class="btn btn-outline-secondary">
+            Back to Wallet
+        </a>
+    </div>
+
+    <!-- Wallet Balance -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <small class="text-muted">Current Wallet Balance</small>
+
+            <h2 class="fw-bold text-success mt-2 mb-0">
+                ₦{{ wallet.balance|default:0|floatformat:2 }}
+            </h2>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+
+            <form method="get" class="row g-3 align-items-end">
+
+                <div class="col-md-4">
+                    <label class="form-label">Transaction Type</label>
+
+                    <select name="type" class="form-select">
+                        <option value="">All Transactions</option>
+
+                        <option value="CREDIT"
+                            {% if transaction_type == 'CREDIT' %}selected{% endif %}>
+                            Credits
+                        </option>
+
+                        <option value="DEBIT"
+                            {% if transaction_type == 'DEBIT' %}selected{% endif %}>
+                            Debits
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">
+                        Filter
+                    </button>
+
+                    <a href="{% url 'wallets:member_transactions' %}"
+                       class="btn btn-outline-secondary">
+                        Reset
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-transparent py-3">
+            <h5 class="fw-bold mb-0">All Transactions</h5>
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Balance Before</th>
+                            <th>Balance After</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for transaction in transactions %}
+
+                        <tr>
+                            <td>
+                                {{ transaction.created_at|date:"d M Y" }}
+                                <div class="small text-muted">
+                                    {{ transaction.created_at|date:"h:i A" }}
+                                </div>
+                            </td>
+
+                            <td>
+                                <strong>{{ transaction.reference }}</strong>
+                            </td>
+
+                            <td>
+                                {{ transaction.description|default:"Wallet transaction" }}
+                            </td>
+
+                            <td>
+                                {% if transaction.transaction_type == 'CREDIT' %}
+                                    <span class="badge bg-success">
+                                        Credit
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        Debit
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="fw-bold {% if transaction.transaction_type == 'CREDIT' %}text-success{% else %}text-danger{% endif %}">
+                                {% if transaction.transaction_type == 'CREDIT' %}+{% else %}-{% endif %}₦{{ transaction.amount|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                ₦{{ transaction.balance_before|floatformat:2 }}
+                            </td>
+
+                            <td class="fw-bold">
+                                ₦{{ transaction.balance_after|floatformat:2 }}
+                            </td>
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <h6 class="text-muted">
+                                    No wallet transactions found.
+                                </h6>
+                                <small class="text-muted">
+                                    Your wallet activity will appear here.
+                                </small>
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-transparent">
+
+            <nav>
+                <ul class="pagination justify-content-end mb-0">
+
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}&type={{ transaction_type }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}&type={{ transaction_type }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}

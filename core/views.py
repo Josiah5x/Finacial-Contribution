@@ -21,8 +21,7 @@ User = get_user_model()
 @login_required
 def member_dashboard(request):
     # Only members can access this dashboard.
-    if request.user.role == 'MEMBER':
-        return redirect('member_dashboard')
+    
     
     if request.user.role != 'MEMBER':
         return redirect('dashboard')
@@ -90,6 +89,11 @@ def landing_page(request):
 def dashboard(request):
 
     user = request.user
+
+    # Redirect members to their own dashboard.
+    if user.role == User.Role.MEMBER:
+        return redirect('member_dashboard')
+
     today = timezone.localdate()
 
     # General statistics
@@ -118,22 +122,16 @@ def dashboard(request):
 
     total_users = User.objects.count()
 
-    # Default dashboard values
     context = {
         'today': today,
-
         'total_members': total_members,
         'active_members': active_members,
         'pending_members': pending_members,
-
         'total_agents': total_agents,
         'active_agents': active_agents,
-
         'total_managers': total_managers,
         'total_users': total_users,
 
-        # These will be connected when the financial
-        # models are completed.
         'today_collection': 0,
         'pending_withdrawals': 0,
         'total_collections': 0,
@@ -144,11 +142,6 @@ def dashboard(request):
         'member_contributions': 0,
         'pending_payments': 0,
     }
-
-    # Member-specific information
-    if user.role == User.Role.MEMBER:
-        member = Member.objects.filter(user=user).first()
-        context['member'] = member
 
     return render(
         request,
