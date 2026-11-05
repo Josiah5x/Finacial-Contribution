@@ -289,6 +289,15 @@
         </li>
     {% endif %}
 
+    {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' or request.user.role == 'ACCOUNTANT' %}
+        <li class="nav-item">
+            <a href="{% url 'expenses:expense_list' %}" class="nav-link">
+                <i class="bi bi-wallet2"></i>
+                <span>Expenses</span>
+            </a>
+        </li>
+        {% endif %}
+
 </div>
 
     <div class="sidebar-footer">

@@ -71,8 +71,8 @@
     <div class="col-xl-3 col-md-6">
         <div class="stat-card">
             <span class="stat-label">Pending Withdrawals</span>
-            <div class="stat-value">₦{{ pending_withdrawals|floatformat:2 }}</div>
-            <small class="text-muted">Awaiting approval</small>
+            <div class="stat-value">{{pending_withdrawals }}</div>
+            <small class="text-muted">Requests awaiting approval</small>
         </div>
     </div>
 
@@ -121,7 +121,7 @@
         </div>
 
         <div class="col-md-3 col-6">
-            <a href="#" class="quick-action">
+            <a href="{% url 'contributions:plan_create' %}" class="quick-action">
                 <i class="bi bi-calendar-plus fs-4 text-warning"></i>
                 <span>Create Plan</span>
             </a>
@@ -191,7 +191,7 @@
         </div>
 
         <div class="col-md-3 col-6">
-            <a href="#" class="quick-action">
+            <a href="{% url 'agents:agent_list' %}" class="quick-action">
                 <i class="bi bi-person-badge fs-4 text-primary"></i>
                 <span>Manage Agents</span>
             </a>
@@ -544,62 +544,90 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+{{ collection_chart_labels|json_script:"collection-chart-labels" }}
+{{ collection_chart_values|json_script:"collection-chart-values" }}
+{{ payment_chart_values|json_script:"payment-chart-values" }}
+
 <script>
-const collectionCanvas = document.getElementById('collectionChart');
+document.addEventListener('DOMContentLoaded', function () {
 
-if (collectionCanvas) {
-    new Chart(collectionCanvas, {
-        type: 'line',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Collections (₦)',
-                data: [0, 0, 0, 0, 0, 0, 0],
-                borderColor: '#16a36a',
-                backgroundColor: 'rgba(22,163,106,.12)',
-                fill: true,
-                tension: .4,
-                borderWidth: 3,
-                pointRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
+    // Weekly collection chart
+    const collectionCanvas = document.getElementById('collectionChart');
+
+    if (collectionCanvas) {
+        const labels = JSON.parse(
+            document.getElementById('collection-chart-labels').textContent
+        );
+
+        const values = JSON.parse(
+            document.getElementById('collection-chart-values').textContent
+        );
+
+        new Chart(collectionCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Collections (₦)',
+                    data: values,
+                    borderColor: '#16a36a',
+                    backgroundColor: 'rgba(22,163,106,.12)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4
+                }]
             },
-            scales: {
-                y: { beginAtZero: true }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
             }
-        }
-    });
-}
+        });
+    }
 
-const paymentCanvas = document.getElementById('paymentChart');
+    // Payment methods chart
+    const paymentCanvas = document.getElementById('paymentChart');
 
-if (paymentCanvas) {
-    new Chart(paymentCanvas, {
-        type: 'doughnut',
-        data: {
-            labels: ['Cash', 'Bank Transfer'],
-            datasets: [{
-                data: [0, 0],
-                backgroundColor: ['#16a36a', '#2563eb'],
-                borderWidth: 0,
-                hoverOffset: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '72%',
-            plugins: {
-                legend: { display: false }
+    if (paymentCanvas) {
+        const paymentValues = JSON.parse(
+            document.getElementById('payment-chart-values').textContent
+        );
+
+        new Chart(paymentCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Cash', 'Bank Transfer'],
+                datasets: [{
+                    data: paymentValues,
+                    backgroundColor: ['#16a36a', '#2563eb'],
+                    borderWidth: 0,
+                    hoverOffset: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
             }
-        }
-    });
-}
+        });
+    }
+
+});
 </script>
 
 {% endif %}

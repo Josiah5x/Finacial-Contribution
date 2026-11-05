@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Expense Details</h3>
+            <p class="text-muted mb-0">{{ expense.reference }}</p>
+        </div>
+
+        <a href="{% url 'expenses:expense_list' %}"
+           class="btn btn-outline-secondary">
+            Back to Expenses
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between mb-4">
+                        <h4>{{ expense.title }}</h4>
+
+                        <span class="badge
+                            {% if expense.status == 'PAID' %}bg-success
+                            {% elif expense.status == 'APPROVED' %}bg-primary
+                            {% elif expense.status == 'REJECTED' %}bg-danger
+                            {% else %}bg-warning text-dark{% endif %}">
+                            {{ expense.get_status_display }}
+                        </span>
+                    </div>
+
+                    <h2 class="fw-bold mb-4">
+                        ₦{{ expense.amount|floatformat:2 }}
+                    </h2>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">Category</small>
+                            <p>{{ expense.category.name }}</p>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">Expense Date</small>
+                            <p>{{ expense.expense_date|date:"d M Y" }}</p>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">Paid To / Beneficiary</small>
+                            <p>{{ expense.paid_to }}</p>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">Payment Method</small>
+                            <p>{{ expense.get_payment_method_display|default:"Not paid yet" }}</p>
+                        </div>
+
+                        <div class="col-md-12">
+                            <small class="text-muted">Description</small>
+                            <p>{{ expense.description|default:"No description provided." }}</p>
+                        </div>
+
+                        <div class="col-md-12">
+                            <small class="text-muted">Notes</small>
+                            <p>{{ expense.notes|default:"No notes." }}</p>
+                        </div>
+
+                        {% if expense.receipt %}
+                        <div class="col-md-12">
+                            <a href="{{ expense.receipt.url }}" target="_blank"
+                               class="btn btn-outline-primary btn-sm">
+                                View Receipt
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <div class="row g-3 small">
+                        <div class="col-md-6">
+                            <strong>Recorded by:</strong>
+                            {{ expense.recorded_by.get_full_name|default:expense.recorded_by.username }}
+                        </div>
+
+                        {% if expense.approved_by %}
+                        <div class="col-md-6">
+                            <strong>Approved by:</strong>
+                            {{ expense.approved_by.get_full_name|default:expense.approved_by.username }}
+                        </div>
+                        {% endif %}
+
+                        {% if expense.paid_by %}
+                        <div class="col-md-6">
+                            <strong>Paid by:</strong>
+                            {{ expense.paid_by.get_full_name|default:expense.paid_by.username }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if expense.rejection_reason %}
+                    <div class="alert alert-danger mt-4">
+                        <strong>Rejection reason:</strong>
+                        {{ expense.rejection_reason }}
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <h5 class="fw-bold mb-3">Expense Actions</h5>
+
+                    {% if expense.status == 'PENDING' and request.user.role == 'ADMIN' or expense.status == 'PENDING' and request.user.role == 'MANAGER' %}
+
+                        <form method="post"
+                              action="{% url 'expenses:expense_approve' expense.pk %}"
+                              class="mb-3">
+                            {% csrf_token %}
+                            <button class="btn btn-success w-100"
+                                    onclick="return confirm('Approve this expense?')">
+                                Approve Expense
+                            </button>
+                        </form>
+
+                        <form method="post"
+                              action="{% url 'expenses:expense_reject' expense.pk %}">
+                            {% csrf_token %}
+
+                            {{ rejection_form.rejection_reason }}
+
+                            <button class="btn btn-danger w-100 mt-2"
+                                    onclick="return confirm('Reject this expense?')">
+                                Reject Expense
+                            </button>
+                        </form>
+
+                    {% elif expense.status == 'APPROVED' and request.user.role == 'ADMIN' or expense.status == 'APPROVED' and request.user.role == 'ACCOUNTANT' %}
+
+                        <form method="post"
+                              action="{% url 'expenses:expense_pay' expense.pk %}">
+                            {% csrf_token %}
+
+                            <label class="form-label">Payment Method</label>
+                            {{ payment_form.payment_method }}
+
+                            <label class="form-label mt-3">Payment Notes</label>
+                            {{ payment_form.notes }}
+
+                            <button class="btn btn-primary w-100 mt-3"
+                                    onclick="return confirm('Mark this expense as paid?')">
+                                Mark as Paid
+                            </button>
+                        </form>
+
+                    {% elif expense.status == 'PAID' %}
+                        <div class="alert alert-success mb-0">
+                            This expense has been paid.
+                        </div>
+
+                    {% elif expense.status == 'REJECTED' %}
+                        <div class="alert alert-danger mb-0">
+                            This expense was rejected.
+                        </div>
+
+                    {% else %}
+                        <p class="text-muted mb-0">
+                            No action is currently available for this expense.
+                        </p>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
