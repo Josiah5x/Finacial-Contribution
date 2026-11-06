@@ -11,4 +11,15 @@ urlpatterns = [
     views.member_transactions,
     name='member_transactions'
     ),
+    path(
+    'my-statement/pdf/',
+    views.member_statement_pdf,
+    name='member_statement_pdf'
+    ),
+    path(
+    'my-statement',
+    views.member_statement,
+    name='member_statement'
+    ),
+    path('my-wallet/', views.member_wallet, name='member_wallet'),
 ]

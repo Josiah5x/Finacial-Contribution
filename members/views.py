@@ -17,6 +17,7 @@ from .models import Member
 
 from django.contrib.auth import get_user_model
 from .forms import MemberCreateForm
+from wallets.models import Wallet
 
 
 
@@ -54,6 +55,14 @@ def member_create(request):
                 member.status = Member.Status.ACTIVE
                 member.created_by = request.user
                 member.save()
+                # Create the member's wallet automatically
+                Wallet.objects.get_or_create(
+                    member=member,
+                    defaults={
+                        'balance': 0,
+                        'is_active': True,
+                    }
+                )
 
             messages.success(
                 request,
@@ -200,6 +209,14 @@ def member_approve(request, pk):
         if member.user:
             member.user.is_active = True
             member.user.save(update_fields=['is_active'])
+            
+        Wallet.objects.get_or_create(
+            member=member,
+            defaults={
+                'balance': 0,
+                'is_active': True,
+                }
+            )
 
     messages.success(request, f'{member.full_name} has been approved.')
 

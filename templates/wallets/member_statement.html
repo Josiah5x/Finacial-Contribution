@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}My Contribution Statement | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">My Contribution Statement</h3>
+            <p class="text-muted mb-0">
+                Your wallet financial statement.
+            </p>
+        </div>
+
+        <a href="{% url 'wallets:member_wallet' %}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> My Wallet
+        </a>
+    </div>
+
+    {% if wallet %}
+
+    <!-- Member Details -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <small class="text-muted">Member Name</small>
+                    <h6>{{ member.full_name }}</h6>
+                </div>
+
+                <div class="col-md-4">
+                    <small class="text-muted">Member Number</small>
+                    <h6>{{ member.member_no }}</h6>
+                </div>
+
+                <div class="col-md-4">
+                    <small class="text-muted">Statement Date</small>
+                    <h6>{{ today|date:"d M Y" }}</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date"
+                           class="form-control"
+                           value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date"
+                           class="form-control"
+                           value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-filter me-1"></i> Filter Statement
+                    </button>
+
+                    <a href="{% url 'wallets:member_statement' %}"
+                       class="btn btn-light">
+                        Reset
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Opening Balance</small>
+                    <h4 class="fw-bold mt-2">
+                        ₦{{ opening_balance|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Total Contributions</small>
+                    <h4 class="fw-bold text-success mt-2">
+                        ₦{{ total_credits|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Total Withdrawals</small>
+                    <h4 class="fw-bold text-danger mt-2">
+                        ₦{{ total_debits|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">Closing Balance</small>
+                    <h4 class="fw-bold text-primary mt-2">
+                        ₦{{ closing_balance|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Transactions -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0">Transaction Details</h5>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th class="text-end">Credit</th>
+                            <th class="text-end">Debit</th>
+                            <th class="text-end">Balance</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.created_at|date:"d M Y" }}</td>
+
+                            <td>{{ transaction.reference }}</td>
+
+                            <td>{{ transaction.description }}</td>
+
+                            <td>
+                                {% if transaction.transaction_type == 'CREDIT' %}
+                                    <span class="badge bg-success-subtle text-success">
+                                        Credit
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        Debit
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end text-success">
+                                {% if transaction.transaction_type == 'CREDIT' %}
+                                    ₦{{ transaction.amount|floatformat:2 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end text-danger">
+                                {% if transaction.transaction_type == 'DEBIT' %}
+                                    ₦{{ transaction.amount|floatformat:2 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end fw-semibold">
+                                ₦{{ transaction.balance_after|floatformat:2 }}
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                No transactions found for this period.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Download PDF -->
+    <div class="text-end">
+        <a href="{% url 'wallets:member_statement_pdf' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}"
+           class="btn btn-success">
+            <i class="bi bi-file-earmark-pdf me-1"></i>
+            Download PDF
+        </a>
+    </div>
+
+    {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-wallet2 display-3 text-muted"></i>
+                <h5 class="mt-3">Wallet Not Available</h5>
+                <p class="text-muted">
+                    Please contact the administrator.
+                </p>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -85,7 +85,7 @@ def expense_list(request):
     total_expenses = (
     Expense.objects.filter(
         status=Expense.Status.PAID
-    ).aggregate(total=Sum('amount'))['total'] or zero
+    ).aggregate(total=Sum('amount'))['total'] or 0
     )
 
     paginator = Paginator(expenses, 20)
