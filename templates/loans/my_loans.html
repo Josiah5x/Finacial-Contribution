@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">My Loans</h3>
+            <p class="text-muted">View your loan applications and repayments.</p>
+        </div>
+
+        <a href="{% url 'loans:loan_apply' %}" class="btn btn-primary">
+            Apply for Loan
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Loan Number</th>
+                            <th>Requested</th>
+                            <th>Approved</th>
+                            <th>Interest Rate</th>
+                            <th>Total Repayment</th>
+                            <th>Outstanding</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for loan in loans %}
+                        <tr>
+                            <td>{{ loan.loan_no }}</td>
+                            <td>₦{{ loan.requested_amount|floatformat:2 }}</td>
+                            <td>
+                                {% if loan.approved_amount %}
+                                    ₦{{ loan.approved_amount|floatformat:2 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>{{ loan.interest_rate }}%</td>
+                            <td>₦{{ loan.total_repayable|floatformat:2 }}</td>
+                            <td>₦{{ loan.outstanding_balance|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if loan.status == 'COMPLETED' %}bg-success
+                                    {% elif loan.status == 'REJECTED' %}bg-danger
+                                    {% elif loan.status == 'PENDING' %}bg-warning text-dark
+                                    {% else %}bg-primary{% endif %}">
+                                    {{ loan.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ loan.created_at|date:"d M Y" }}</td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                You have not applied for any loans yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Loan Management</h3>
+            <p class="text-muted mb-0">Review and manage member loan applications.</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+
+            <form method="GET" class="row g-2 mb-4">
+                <div class="col-md-4">
+                    <select name="status" class="form-select">
+                        <option value="">All loan statuses</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}"
+                                {% if selected_status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <button class="btn btn-primary">Filter</button>
+                    <a href="{% url 'loans:loan_list' %}"
+                       class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Loan No.</th>
+                            <th>Member</th>
+                            <th>Requested Amount</th>
+                            <th>Approved Amount</th>
+                            <th>Repayment Period</th>
+                            <th>Status</th>
+                            <th>Application Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for loan in loans %}
+                        <tr>
+                            <td class="fw-semibold">{{ loan.loan_no }}</td>
+                            <td>{{ loan.member }}</td>
+                            <td>₦{{ loan.requested_amount|floatformat:2 }}</td>
+                            <td>
+                                {% if loan.approved_amount %}
+                                    ₦{{ loan.approved_amount|floatformat:2 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>{{ loan.repayment_months }} month(s)</td>
+                            <td>
+                                <span class="badge
+                                    {% if loan.status == 'COMPLETED' %}bg-success
+                                    {% elif loan.status == 'REJECTED' %}bg-danger
+                                    {% elif loan.status == 'PENDING' %}bg-warning text-dark
+                                    {% else %}bg-primary{% endif %}">
+                                    {{ loan.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ loan.created_at|date:"d M Y" }}</td>
+                            <td>
+                                <a href="{% url 'loans:loan_detail' loan.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No loan applications found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

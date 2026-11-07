@@ -275,6 +275,20 @@
                 <i class="bi bi-box-arrow-down"></i> Request Withdrawal
             </a>
 
+            <li class="nav-item">
+                <a href="{% url 'loans:loan_apply' %}" class="nav-link">
+                    <i class="bi bi-wallet2"></i>
+                    <span>Apply for Loan</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'loans:my_loans' %}" class="nav-link">
+                    <i class="bi bi-clock-history"></i>
+                    <span>My Loans</span>
+                </a>
+            </li>
+
             {% endif %}
 
             {% if request.user.role == 'ADMIN' or request.user.role == 'MANAGER' or request.user.role == 'ACCOUNTANT' or
@@ -292,6 +306,12 @@
                 <a href="{% url 'expenses:expense_list' %}" class="nav-link">
                     <i class="bi bi-wallet2"></i>
                     <span>Expenses</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'loans:loan_list' %}" class="nav-link">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Loan Management</span>
                 </a>
             </li>
             {% endif %}

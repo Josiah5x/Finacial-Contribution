@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Apply for a Loan</h3>
+            <p class="text-muted mb-0">
+                Apply based on your verified contributions.
+            </p>
+        </div>
+
+        <a href="{% url 'loans:my_loans' %}"
+           class="btn btn-outline-secondary">
+            My Loans
+        </a>
+    </div>
+
+    <!-- Eligibility Summary -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Verified Contributions</p>
+                    <h4 class="fw-bold">
+                        ₦{{ eligibility.verified_contributions|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Maximum Loan</p>
+                    <h4 class="fw-bold">
+                        ₦{{ eligibility.maximum_loan|floatformat:2 }}
+                    </h4>
+                    <small class="text-muted">
+                        {{ eligibility.eligibility_percentage }}% eligibility
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Available Loan Eligibility</p>
+                    <h4 class="fw-bold text-success">
+                        ₦{{ eligibility.eligible_amount|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <h5 class="fw-bold mb-4">Loan Application Details</h5>
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Loan Amount (₦)
+                            </label>
+                            {{ form.requested_amount }}
+
+                            {% for error in form.requested_amount.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Repayment Period
+                            </label>
+                            {{ form.repayment_months }}
+
+                            {% for error in form.repayment_months.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Reason for Loan
+                            </label>
+                            {{ form.notes }}
+
+                            {% for error in form.notes.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            Submit Loan Application
+                        </button>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Repayment Preview -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+
+                    <h5 class="fw-bold mb-3">Repayment Estimate</h5>
+
+                    <p class="text-muted small">
+                        Simple interest at 10% per annum.
+                        Final figures are subject to approval.
+                    </p>
+
+                    <div class="mb-3">
+                        <span class="text-muted">Principal</span>
+                        <h5 id="previewPrincipal">₦0.00</h5>
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="text-muted">Interest</span>
+                        <h5 id="previewInterest">₦0.00</h5>
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="text-muted">Total Repayment</span>
+                        <h4 class="fw-bold text-primary"
+                            id="previewTotal">₦0.00</h4>
+                    </div>
+
+                    <hr>
+
+                    <span class="text-muted">Estimated Monthly Payment</span>
+                    <h4 class="fw-bold text-success"
+                        id="previewMonthly">₦0.00</h4>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const amountInput = document.getElementById('id_requested_amount');
+    const monthsInput = document.getElementById('id_repayment_months');
+
+    const formatNaira = value =>
+        '₦' + value.toLocaleString('en-NG', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+    function updatePreview() {
+        const principal = parseFloat(amountInput.value) || 0;
+        const months = parseInt(monthsInput.value) || 1;
+
+        const interest = principal * 10 * months / 1200;
+        const total = principal + interest;
+        const monthly = total / months;
+
+        document.getElementById('previewPrincipal').textContent =
+            formatNaira(principal);
+
+        document.getElementById('previewInterest').textContent =
+            formatNaira(interest);
+
+        document.getElementById('previewTotal').textContent =
+            formatNaira(total);
+
+        document.getElementById('previewMonthly').textContent =
+            formatNaira(monthly);
+    }
+
+    amountInput.addEventListener('input', updatePreview);
+    monthsInput.addEventListener('change', updatePreview);
+
+    updatePreview();
+});
+</script>
+{% endblock %}
