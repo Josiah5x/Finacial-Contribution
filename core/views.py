@@ -10,8 +10,9 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from collections_daily.models import Collection
 from withdrawals.models import Withdrawal
-from members.models import Member
+from members.models import Member,MemberAssignment
 from django.db.models import Sum
+from datetime import date, timedelta
 
 from decimal import Decimal
 

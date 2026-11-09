@@ -6,6 +6,7 @@ app_name = 'agents'
 urlpatterns = [
     path('', views.agent_list, name='agent_list'),
     path('create/', views.agent_create, name='agent_create'),
+    path('my-members/', views.my_members, name='my_members'),
     
 
     path('<int:pk>/', views.agent_detail, name='agent_detail'),

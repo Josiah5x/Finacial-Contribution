@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from members.models import Member
 
-from .forms import LoanApprovalForm, LoanRejectionForm
+from .forms import LoanApprovalForm, LoanRejectionForm,LoanApplicationForm
 
 
 

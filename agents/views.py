@@ -13,6 +13,8 @@ from django.shortcuts import get_object_or_404
 
 from .forms import AgentForm, AgentUpdateForm
 from .models import Agent
+from members.models import MemberAssignment
+from django.shortcuts import render, redirect, get_object_or_404
 
 
 User = get_user_model()
@@ -247,3 +249,25 @@ def agent_activate(request, pk):
 
 
 
+@login_required
+@role_required('AGENT')
+def my_members(request):
+
+    agent = Agent.objects.filter(user=request.user).first()
+
+    if not agent:
+        messages.error(
+            request,
+            "Your Agent profile is not linked to your login account. Contact the administrator."
+        )
+        return redirect('dashboard')
+
+    assignments = MemberAssignment.objects.filter(
+        agent=agent,
+        is_active=True
+    ).select_related('member')
+
+    return render(request, 'agents/my_members.html', {
+        'agent': agent,
+        'assignments': assignments,
+    })
