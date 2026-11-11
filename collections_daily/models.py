@@ -13,6 +13,7 @@ class Collection(models.Model):
     class PaymentMethod(models.TextChoices):
         CASH = 'CASH', 'Cash'
         BANK_TRANSFER = 'BANK_TRANSFER', 'Bank Transfer'
+        PAYSTACK = 'PAYSTACK', 'Paystack Online Payment'
 
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending Verification'
@@ -53,6 +54,28 @@ class Collection(models.Model):
 
     transaction_reference = models.CharField(
         max_length=100,
+        blank=True
+    )
+
+    paystack_reference = models.CharField(
+    max_length=100,
+    unique=True,
+    null=True,
+    blank=True
+    )
+
+    paystack_access_code = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    paystack_authorization_url = models.URLField(
+        max_length=500,
+        blank=True
+    )
+
+    paystack_paid_at = models.DateTimeField(
+        null=True,
         blank=True
     )
 

@@ -1,0 +1,83 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <h4 class="mb-4">Pay Contribution</h4>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Contribution Plan
+                    </label>
+
+                    <select
+                        name="enrollment"
+                        class="form-select"
+                        required
+                    >
+
+                        <option value="">
+                            Select contribution plan
+                        </option>
+
+                        {% for enrollment in enrollments %}
+
+                            <option value="{{ enrollment.pk }}">
+
+                                {{ enrollment.plan.name }}
+                                - ₦{{ enrollment.agreed_amount }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Amount (₦)
+                    </label>
+
+                    <input
+                        type="number"
+                        name="amount"
+                        class="form-control"
+                        min="0.01"
+                        step="0.01"
+                        required
+                    >
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+
+                    Continue to Paystack
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

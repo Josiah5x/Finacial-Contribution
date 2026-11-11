@@ -1,3 +1,16 @@
+
+import uuid
+
+from django.conf import settings
+from django.db import transaction
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from members.models import Member, MemberAssignment
+from contributions.models import PlanEnrollment
+from .models import Collection
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -5,18 +18,21 @@ from django.core.paginator import Paginator
 from django.db import transaction, IntegrityError
 from django.core.exceptions import ValidationError
 from django.db.models import Sum, Q
-from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
-from .models import Collection
 from .forms import CollectionForm
 
-from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import CollectionRejectionForm
 from wallets.services import credit_collection
+
+from .paystack import (
+    initialize_transaction,
+    verify_and_credit_collection,
+    PaystackError,
+)
 
 User = get_user_model()
 
@@ -271,6 +287,215 @@ def collection_reject(request, pk):
         'collections:collection_detail',
         pk=collection.pk,
     )
+
+
+
+@login_required
+@role_required(User.Role.MEMBER)
+def paystack_start(request):
+
+    member = get_object_or_404(
+        Member,
+        user=request.user,
+        status=Member.Status.ACTIVE,
+    )
+
+    enrollments = PlanEnrollment.objects.filter(
+        member=member,
+        status=PlanEnrollment.Status.ACTIVE,
+    ).select_related('plan')
+
+    assignment = MemberAssignment.objects.filter(
+        member=member,
+        is_active=True,
+    ).first()
+
+    if not assignment:
+        messages.error(
+            request,
+            'You must be assigned to an agent before making a payment.'
+        )
+        return redirect('member_dashboard')
+
+    if request.method == 'POST':
+
+        enrollment_id = request.POST.get('enrollment')
+        amount = request.POST.get('amount')
+
+        enrollment = get_object_or_404(
+            enrollments,
+            pk=enrollment_id,
+        )
+
+        reference = f'DC-{uuid.uuid4().hex[:24]}'
+
+        collection = Collection(
+            enrollment=enrollment,
+            assignment=assignment,
+            amount=amount,
+            payment_method=Collection.PaymentMethod.PAYSTACK,
+            transaction_reference=reference,
+            paystack_reference=reference,
+            collection_date=timezone.localdate(),
+            collected_by=request.user,
+            status=Collection.Status.PENDING,
+        )
+
+        try:
+            collection.full_clean()
+            collection.save()
+
+            callback_url = request.build_absolute_uri(
+                reverse('collections:paystack_callback')
+            )
+
+            payment = initialize_transaction(
+                email=request.user.email,
+                amount=collection.amount,
+                reference=reference,
+                callback_url=callback_url,
+                metadata={
+                    'collection_id': collection.pk,
+                    'receipt_no': collection.receipt_no,
+                },
+            )
+
+            collection.paystack_access_code = payment['access_code']
+            collection.paystack_authorization_url = (
+                payment['authorization_url']
+            )
+
+            collection.save(update_fields=[
+                'paystack_access_code',
+                'paystack_authorization_url',
+                'updated_at',
+            ])
+
+            return redirect(payment['authorization_url'])
+
+        except Exception as exc:
+
+            messages.error(
+                request,
+                f'Unable to initialize payment: {exc}'
+            )
+
+    return render(
+        request,
+        'collections/paystack_payment.html',
+        {
+            'member': member,
+            'enrollments': enrollments,
+        }
+    )
+
+
+
+
+def paystack_callback(request):
+
+    reference = request.GET.get('reference')
+
+    if not reference:
+        messages.error(request, 'Payment reference is missing.')
+        return redirect('accounts:login')
+
+    try:
+        transaction_record = verify_and_credit_collection(
+            reference,
+            user=request.user if request.user.is_authenticated else None,
+        )
+
+        messages.success(
+            request,
+            'Payment verified and wallet credited successfully.'
+        )
+
+    except Exception as exc:
+
+        messages.error(
+            request,
+            f'Payment verification failed: {exc}'
+        )
+
+    return redirect('wallets:member_wallet')
+
+
+
+
+import hashlib
+import hmac
+import json
+
+
+@csrf_exempt
+@require_POST
+def paystack_webhook(request):
+
+    secret = getattr(
+        settings,
+        'PAYSTACK_SECRET_KEY',
+        ''
+    )
+
+    signature = request.headers.get(
+        'x-paystack-signature',
+        ''
+    )
+
+    if not secret or not signature:
+        return JsonResponse(
+            {'error': 'Invalid signature'},
+            status=401
+        )
+
+    expected_signature = hmac.new(
+        secret.encode('utf-8'),
+        request.body,
+        hashlib.sha512,
+    ).hexdigest()
+
+    if not hmac.compare_digest(
+        expected_signature,
+        signature
+    ):
+        return JsonResponse(
+            {'error': 'Invalid signature'},
+            status=401
+        )
+
+    try:
+        event = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {'error': 'Invalid JSON'},
+            status=400
+        )
+
+    if event.get('event') != 'charge.success':
+        return JsonResponse({'status': 'ignored'})
+
+    reference = (
+        event.get('data', {}).get('reference')
+    )
+
+    if not reference:
+        return JsonResponse(
+            {'error': 'Missing reference'},
+            status=400
+        )
+
+    try:
+        verify_and_credit_collection(reference)
+
+    except Exception:
+        return JsonResponse(
+            {'error': 'Payment verification failed'},
+            status=400
+        )
+
+    return JsonResponse({'status': 'success'})
+
 
 
 

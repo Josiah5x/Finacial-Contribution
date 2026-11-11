@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -141,6 +142,19 @@ STATICFILES_DIRS = [
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ////////////// payment/////////////
+
+PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY')
+PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
+
+PAYSTACK_WEBHOOK_SECRET = config(
+    'PAYSTACK_WEBHOOK_SECRET',
+    default=''
+)
+
+PAYSTACK_BASE_URL = 'https://api.paystack.co'
+PAYSTACK_CURRENCY = 'NGN'
 
 
 # Email
