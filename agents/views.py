@@ -15,6 +15,7 @@ from .forms import AgentForm, AgentUpdateForm
 from .models import Agent
 from members.models import MemberAssignment
 from django.shortcuts import render, redirect, get_object_or_404
+from members.models import Member
 
 
 User = get_user_model()
@@ -270,4 +271,74 @@ def my_members(request):
     return render(request, 'agents/my_members.html', {
         'agent': agent,
         'assignments': assignments,
+    })
+
+
+
+
+
+@login_required
+@role_required('ADMIN', 'MANAGER')
+def promote_member(request, pk):
+    member = get_object_or_404(
+        Member.objects.select_related('user'),
+        pk=pk
+    )
+
+    if not member.user:
+        messages.error(request, 'This member has no linked login account.')
+        return redirect('members:member_detail', pk=member.pk)
+
+    if Agent.objects.filter(user=member.user).exists():
+        messages.warning(request, 'This member is already an agent.')
+        return redirect('members:member_detail', pk=member.pk)
+
+    if request.method == 'POST':
+        phone = request.POST.get('phone', member.phone)
+        collection_area = request.POST.get('collection_area', '').strip()
+        daily_target = request.POST.get('daily_target') or 0
+        address = request.POST.get('address', '').strip()
+
+        if not collection_area:
+            messages.error(request, 'Collection area is required.')
+        else:
+            try:
+                with transaction.atomic():
+                    user = User.objects.select_for_update().get(
+                        pk=member.user.pk
+                    )
+
+                    if user.role != User.Role.MEMBER:
+                        messages.error(
+                            request,
+                            'Only existing members can be promoted.'
+                        )
+                        return redirect(
+                            'members:member_detail',
+                            pk=member.pk
+                        )
+
+                    user.role = User.Role.AGENT
+                    user.save(update_fields=['role'])
+
+                    agent = Agent.objects.create(
+                        user=user,
+                        phone=phone,
+                        address=address,
+                        collection_area=collection_area,
+                        daily_target=daily_target,
+                        status=Agent.Status.ACTIVE,
+                    )
+
+                messages.success(
+                    request,
+                    f'{member.full_name} has been promoted to agent.'
+                )
+                return redirect('agents:agent_detail', pk=agent.pk)
+
+            except Exception as e:
+                messages.error(request, f'Promotion failed: {e}')
+
+    return render(request, 'agents/promote_member.html', {
+        'member': member,
     })

@@ -11,6 +11,8 @@ urlpatterns = [
 
     path('<int:pk>/', views.agent_detail, name='agent_detail'),
     path('<int:pk>/edit/', views.agent_update, name='agent_update'),
+    path(
+    'promote-member/<int:pk>/', views.promote_member, name='promote_member' ),
 
     path('<int:pk>/deactivate/', views.agent_deactivate, name='agent_deactivate'),
     path('<int:pk>/activate/', views.agent_activate, name='agent_activate'),

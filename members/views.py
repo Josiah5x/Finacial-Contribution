@@ -16,7 +16,7 @@ from .forms import MemberForm,MemberAssignment
 from .models import Member
 
 from django.contrib.auth import get_user_model
-from .forms import MemberCreateForm
+from .forms import MemberCreateForm,MemberAssignmentForm,MemberTransferForm
 from wallets.models import Wallet
 
 

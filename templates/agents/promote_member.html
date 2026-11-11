@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Promote Member to Agent | DailyCollect{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <h3 class="fw-bold mb-2">Promote Member to Agent</h3>
+    <p class="text-muted">
+        Convert an existing member account into a collection agent.
+    </p>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+
+            <h5>{{ member.full_name }}</h5>
+            <p class="text-muted">
+                Member No: {{ member.member_no }}<br>
+                Username: {{ member.user.username }}<br>
+                Phone: {{ member.phone }}
+            </p>
+
+            <div class="alert alert-warning">
+                This action changes the member's login role to AGENT.
+                Their existing member and contribution records will remain.
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" name="phone"
+                           class="form-control"
+                           value="{{ member.phone }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Collection Area</label>
+                    <input type="text" name="collection_area"
+                           class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Daily Collection Target (₦)</label>
+                    <input type="number" name="daily_target"
+                           class="form-control" min="0" step="0.01"
+                           value="0">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" class="form-control"
+                              rows="3">{{ member.address }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Promote to Agent
+                </button>
+
+                <a href="{% url 'members:member_detail' member.pk %}"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
