@@ -136,11 +136,12 @@ class MemberRegistrationForm(forms.Form):
     )
 
     business_code = forms.CharField(
-        max_length=30,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter business registration code'
-        })
+    max_length=30,
+    required=False,
+    widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Enter business registration code (optional)'
+    })
     )
 
     password1 = forms.CharField(
@@ -190,8 +191,13 @@ class MemberRegistrationForm(forms.Form):
         return phone
 
     def clean_business_code(self):
-        code = self.cleaned_data['business_code'].strip()
+        code = self.cleaned_data.get('business_code', '').strip()
 
+        # Business code is optional.
+        if not code:
+            return ''
+
+        # Validate only when supplied.
         if code != settings.MEMBER_REGISTRATION_CODE:
             raise forms.ValidationError(
                 'Invalid business registration code.'
@@ -219,6 +225,49 @@ class MemberRegistrationForm(forms.Form):
 
         return cleaned_data
 
+
+
+
+class EmailOTPRequestForm(forms.Form):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address'
+        })
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                'An account with this email already exists.'
+            )
+
+        return email
+
+
+class EmailOTPVerifyForm(forms.Form):
+    otp = forms.CharField(
+        max_length=6,
+        min_length=6,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your 6-digit verification code',
+            'autocomplete': 'one-time-code',
+            'inputmode': 'numeric'
+        })
+    )
+
+    def clean_otp(self):
+        otp = self.cleaned_data['otp'].strip()
+
+        if not otp.isdigit():
+            raise forms.ValidationError(
+                'Enter a valid six-digit verification code.'
+            )
+
+        return otp
 
 
 
