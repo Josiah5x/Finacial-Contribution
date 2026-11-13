@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email | DailyCollect</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .verify-card {
+            background: white;
+            padding: 35px;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,.08);
+        }
+
+        h2 { color: #08264b; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            background: #00a130;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .errorlist { color: red; }
+    </style>
+</head>
+
+<body>
+    <div class="verify-card">
+
+        {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show"
+                    role="alert">
+                    {{ message }}
+                
+            {% endfor %}
+        </div>
+    {% endif %}
+
+        <h2>Verify your email</h2>
+
+        <p>Enter the six-digit verification code sent to your email address.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button type="submit">Verify Email</button>
+        </form>
+    </div>
+</body>
+</html>

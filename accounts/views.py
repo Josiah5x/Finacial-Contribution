@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
+from django.contrib.messages import get_messages
 
 from .models import User
 from .forms import LoginForm, CreateUserForm, UpdateUserForm
@@ -15,7 +16,19 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from members.models import Member
-from .forms import MemberRegistrationForm
+
+
+from django.core.exceptions import ValidationError
+
+from .forms import (
+    LoginForm,
+    CreateUserForm,
+    UpdateUserForm,
+    MemberRegistrationForm,
+    EmailOTPVerifyForm,
+)
+
+from .services import generate_email_otp, verify_email_otp
 
 User = get_user_model()
 
@@ -153,6 +166,7 @@ def dashboard(request):
 
 
 
+
 def member_register(request):
 
     if request.user.is_authenticated:
@@ -162,34 +176,54 @@ def member_register(request):
         form = MemberRegistrationForm(request.POST)
 
         if form.is_valid():
-            with transaction.atomic():
+            email = form.cleaned_data['email'].strip().lower()
 
-                user = User.objects.create_user(
-                    username=form.cleaned_data['username'],
-                    first_name=form.cleaned_data['first_name'],
-                    last_name=form.cleaned_data['last_name'],
-                    email=form.cleaned_data['email'],
-                    phone=form.cleaned_data['phone'],
-                    password=form.cleaned_data['password1'],
-                    role=User.Role.MEMBER,
-                    is_active=False
+            try:
+                with transaction.atomic():
+
+                    # Create inactive user account.
+                    user = User.objects.create_user(
+                        username=form.cleaned_data['username'],
+                        first_name=form.cleaned_data['first_name'],
+                        last_name=form.cleaned_data['last_name'],
+                        email=email,
+                        phone=form.cleaned_data['phone'],
+                        password=form.cleaned_data['password1'],
+                        role=User.Role.MEMBER,
+                        is_active=False
+                    )
+
+                    # Create pending member profile.
+                    Member.objects.create(
+                        user=user,
+                        first_name=user.first_name,
+                        last_name=user.last_name,
+                        phone=user.phone,
+                        email=user.email,
+                        status=Member.Status.PENDING
+                    )
+
+                    # Send the HTML verification email.
+                    generate_email_otp(email)
+
+                # Remember the email for the verification page.
+                request.session['pending_verification_email'] = email
+
+                messages.success(
+                    request,
+                    'Registration submitted! Check your email for your verification code.'
                 )
 
-                Member.objects.create(
-                    user=user,
-                    first_name=user.first_name,
-                    last_name=user.last_name,
-                    phone=user.phone,
-                    email=user.email,
-                    status=Member.Status.PENDING
+                return redirect('accounts:verify_email')
+
+            except ValidationError as error:
+                form.add_error(None, error)
+
+            except Exception:
+                messages.error(
+                    request,
+                    'We could not send your verification email. Please try again.'
                 )
-
-            messages.success(
-                request,
-                'Registration successful! Your account is awaiting administrator approval.'
-            )
-
-            return redirect('accounts:login')
 
     else:
         form = MemberRegistrationForm()
@@ -198,6 +232,67 @@ def member_register(request):
         request,
         'accounts/member_register.html',
         {'form': form}
+    )
+
+
+def verify_email(request):
+
+    email = request.session.get('pending_verification_email')
+
+    if not email:
+        messages.error(
+            request,
+            'Please register before verifying your email.'
+        )
+        return redirect('accounts:register')
+
+    if request.method == 'POST':
+        form = EmailOTPVerifyForm(request.POST)
+
+        if form.is_valid():
+            try:
+                verified = verify_email_otp(
+                    email,
+                    form.cleaned_data['otp']
+                )
+
+                if verified:
+
+                    # Clear previous registration messages.
+                    storage = get_messages(request)
+                    for message in storage:
+                        pass
+
+                    request.session.pop(
+                        'pending_verification_email',
+                        None
+                    )
+
+                    messages.success(
+                        request,
+                        'Email verified successfully! Your account is awaiting administrator approval.'
+                    )
+
+                    return redirect('accounts:login')
+
+                form.add_error(
+                    'otp',
+                    'Invalid or expired verification code.'
+                )
+
+            except ValidationError as error:
+                form.add_error('otp', error)
+
+    else:
+        form = EmailOTPVerifyForm()
+
+    return render(
+        request,
+        'accounts/verify_email.html',
+        {
+            'form': form,
+            'email': email,
+        }
     )
 
 

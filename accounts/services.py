@@ -205,34 +205,34 @@ def generate_email_otp(email):
         """
 
 
-    # Build and send HTML email.
-    email_message = EmailMultiAlternatives(
-        subject=subject,
-        body=plain_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[email],
-    )
+        # Build and send HTML email.
+        email_message = EmailMultiAlternatives(
+            subject=subject,
+            body=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[email],
+        )
 
-    email_message.attach_alternative(
-        html_message,
-        "text/html"
-    )
+        email_message.attach_alternative(
+            html_message,
+            "text/html"
+        )
 
-    # DEBUG: Inspect the actual OTP email before sending.
-    mime_message = email_message.message()
+        # DEBUG: Inspect the actual OTP email before sending.
+        mime_message = email_message.message()
 
-    print("EMAIL CONTENT TYPE:", mime_message.get_content_type())
+        print("EMAIL CONTENT TYPE:", mime_message.get_content_type())
 
-    for part in mime_message.walk():
-        print("EMAIL PART:", part.get_content_type())
+        for part in mime_message.walk():
+            print("EMAIL PART:", part.get_content_type())
 
-        if part.get_content_type() == "text/html":
-            print("HTML CONTENT:")
-            print(part.get_payload(decode=True).decode(
-                part.get_content_charset() or "utf-8"
-            ))
+            if part.get_content_type() == "text/html":
+                print("HTML CONTENT:")
+                print(part.get_payload(decode=True).decode(
+                    part.get_content_charset() or "utf-8"
+                ))
 
-    email_message.send(fail_silently=False)
+        email_message.send(fail_silently=False)
 
     except Exception:
         otp_record.delete()
